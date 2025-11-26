@@ -14,6 +14,9 @@
 - [x] GPS/Position Erfassung
 - [x] Foto-Upload Funktion (Base64)
 - [x] Daten ansehen/löschen Modal
+- [x] **Hilfe-System mit Popups** - Fragezeichen-Buttons für Anleitungen
+- [x] **Bilder integriert** - Alle Anleitungsbilder heruntergeladen und eingebunden
+- [x] **Offline-Bilder** - Bilder im Service Worker Cache
 
 ## 🔧 Noch zu erledigen
 

@@ -4,7 +4,12 @@ const urlsToCache = [
     './index.html',
     './styles.css',
     './app.js',
-    './manifest.json'
+    './manifest.json',
+    './images/trieb.jpg',
+    './images/foerstner_kalibration.jpg',
+    './images/foerstner_seite.jpg',
+    './images/foerstner_ego.jpg',
+    './images/neigung.png'
 ];
 
 // Install Service Worker

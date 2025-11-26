@@ -23,7 +23,7 @@
         </div>
 
         <div class="action-buttons">
-            <button id="copyPrevBtn" class="btn btn-secondary">📋 Vorherige Daten</button>
+            <button id="copyPrevBtn" class="btn btn-secondary">📋 vorherige Daten übernehmen</button>
             <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
             <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
         </div>
@@ -53,7 +53,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="baumId">Baum-ID (z.B. "LRO-B-9") *</label>
+                    <label for="baumId">
+                        Baum-ID (z.B. "LRO-B-9") *
+                        <button type="button" class="help-btn" onclick="showHelp('baumId')">?</button>
+                    </label>
                     <input type="text" id="baumId" name="baumId" placeholder="LRO-B-9" required pattern="[A-Z]+-[A-Z]+-[0-9]+(\.[0-9]+)?">
                     <small>Format: Lokalgruppe-Reihe-Nummer (z.B. LRO-B-9 oder DA-C-2.1)</small>
                 </div>
@@ -74,7 +77,10 @@
 
             <!-- Seite 2: Wuchshöhe -->
             <section class="form-section">
-                <h2>Wuchshöhe</h2>
+                <h2>
+                    Wuchshöhe
+                    <button type="button" class="help-btn" onclick="showHelp('wuchshoehe')">?</button>
+                </h2>
                 
                 <div class="form-group">
                     <label for="hoehe">Höhe in cm *</label>
@@ -95,12 +101,13 @@
                 <div class="form-group">
                     <label for="umfang">Umfang in mm (Standard)</label>
                     <input type="number" id="umfang" name="umfang" min="0" max="5000">
+                    <small>Markierung bei 1,3 m am eigenen Körper machen (z.B. mit Kreppband)</small>
                 </div>
 
                 <div class="form-group">
                     <label for="durchmesser">Durchmesser in mm (falls Umfang nicht möglich)</label>
                     <input type="number" id="durchmesser" name="durchmesser" min="0" max="2000">
-                    <small>Nur ausfüllen wenn Umfang nicht messbar</small>
+                    <small>Messung mit Zollstock, nur ausfüllen wenn Umfang nicht messbar</small>
                 </div>
 
                 <div class="form-group">
@@ -111,7 +118,10 @@
 
             <!-- Seite 4: Vitalität -->
             <section class="form-section">
-                <h2>Einordnung der Vitalität</h2>
+                <h2>
+                    Einordnung der Vitalität
+                    <button type="button" class="help-btn" onclick="showHelp('trieblaenge')">?</button>
+                </h2>
                 
                 <div class="form-group">
                     <label for="trieblaenge">Durchschnittliche Länge der einjährigen Triebe in cm *</label>
@@ -130,7 +140,10 @@
                 <h2>Statik und Stammqualität</h2>
                 
                 <div class="form-group">
-                    <label for="neigung">Neigung *</label>
+                    <label for="neigung">
+                        Neigung *
+                        <button type="button" class="help-btn" onclick="showHelp('neigung')">?</button>
+                    </label>
                     <select id="neigung" name="neigung" required>
                         <option value="">Bitte wählen...</option>
                         <option value="Sehr geneigt (> 30° Neigung)">Sehr geneigt (> 30° Neigung)</option>
@@ -212,7 +225,10 @@
 
             <!-- Seite 7: Baumscheibe -->
             <section class="form-section">
-                <h2>Baumscheibe</h2>
+                <h2>
+                    Baumscheibe
+                    <button type="button" class="help-btn" onclick="showHelp('baumscheibe')">?</button>
+                </h2>
                 
                 <div class="form-group">
                     <label>Art des Managements</label>
@@ -301,10 +317,24 @@
             </div>
         </form>
 
+        <!-- Help Modals -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content help-modal-content">
+                <span class="close" onclick="closeHelp()">&times;</span>
+                <div id="helpContent"></div>
+            </div>
+        </div>
+
+        <!-- Data Modal -->
         <div id="dataModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <h2>Gespeicherte Baumdaten</h2>
+                <div id="treeMap" class="tree-map-container">
+                    <h3>Positionskarte</h3>
+                    <canvas id="treeMapCanvas"></canvas>
+                    <div id="mapLegend" class="map-legend"></div>
+                </div>
                 <div id="dataList"></div>
                 <button id="clearAllBtn" class="btn btn-danger">Alle Daten löschen</button>
             </div>

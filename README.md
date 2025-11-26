@@ -11,6 +11,7 @@ Progressive Web App für das Agroforst-Monitoring zur Erfassung von Baumentwickl
 ✅ **GPS Integration** - Automatische Standorterfassung
 ✅ **Foto-Upload** - Dokumentation von Auffälligkeiten
 ✅ **Local Storage** - Alle Daten werden lokal gespeichert
+✅ **Integrierte Hilfe** - Anleitungen mit Bildern per Klick auf ? Button
 
 ## Installation
 
