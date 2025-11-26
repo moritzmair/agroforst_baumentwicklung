@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Baumentwicklung Monitoring für Agroforst">
+    <meta name="theme-color" content="#2e7d32">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Baumentwicklung Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌳 Baumentwicklung</h1>
+            <p class="subtitle">Agroforst Monitoring</p>
+        </header>
+
+        <div class="status-bar">
+            <span id="onlineStatus" class="online">●</span>
+            <span id="savedCount">0 Bäume gespeichert</span>
+        </div>
+
+        <div class="action-buttons">
+            <button id="copyPrevBtn" class="btn btn-secondary">📋 Vorherige Daten</button>
+            <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
+            <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
+        </div>
+
+        <form id="treeForm">
+            <!-- Seite 1: ID und Standort -->
+            <section class="form-section">
+                <h2>ID und Standort</h2>
+                
+                <div class="form-group">
+                    <label for="name">Name der durchführenden Person(en) *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="baumart">Untersuchte Baumart *</label>
+                    <input type="text" id="baumart" name="baumart" list="baumartList" required>
+                    <datalist id="baumartList">
+                        <option value="Obst">
+                        <option value="Kirsche">
+                        <option value="Walnuss">
+                        <option value="Birne">
+                        <option value="Sorbus/Wertholz">
+                        <option value="Speierling">
+                        <option value="Elsbeere">
+                    </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="baumId">Baum-ID (z.B. "LRO-B-9") *</label>
+                    <input type="text" id="baumId" name="baumId" placeholder="LRO-B-9" required pattern="[A-Z]+-[A-Z]+-[0-9]+(\.[0-9]+)?">
+                    <small>Format: Lokalgruppe-Reihe-Nummer (z.B. LRO-B-9 oder DA-C-2.1)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Position</label>
+                    <button type="button" id="getLocationBtn" class="btn btn-secondary">📍 GPS Position erfassen</button>
+                    <div id="locationDisplay" class="location-info"></div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s2">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s2" name="ergaenzungen_s2" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 2: Wuchshöhe -->
+            <section class="form-section">
+                <h2>Wuchshöhe</h2>
+                
+                <div class="form-group">
+                    <label for="hoehe">Höhe in cm *</label>
+                    <input type="number" id="hoehe" name="hoehe" min="0" max="10000" required>
+                    <small>Messung mit Zollstock, Teleskopstab oder Förstnerdreieck</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s3">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s3" name="ergaenzungen_s3" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 3: Brusthöhenumfang -->
+            <section class="form-section">
+                <h2>Brusthöhenumfang (1,3m)</h2>
+                
+                <div class="form-group">
+                    <label for="umfang">Umfang in mm (Standard)</label>
+                    <input type="number" id="umfang" name="umfang" min="0" max="5000">
+                </div>
+
+                <div class="form-group">
+                    <label for="durchmesser">Durchmesser in mm (falls Umfang nicht möglich)</label>
+                    <input type="number" id="durchmesser" name="durchmesser" min="0" max="2000">
+                    <small>Nur ausfüllen wenn Umfang nicht messbar</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s4">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s4" name="ergaenzungen_s4" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 4: Vitalität -->
+            <section class="form-section">
+                <h2>Einordnung der Vitalität</h2>
+                
+                <div class="form-group">
+                    <label for="trieblaenge">Durchschnittliche Länge der einjährigen Triebe in cm *</label>
+                    <input type="number" id="trieblaenge" name="trieblaenge" min="0" max="500" required>
+                    <small>Bei toten Bäumen 0 eintragen</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s5">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s5" name="ergaenzungen_s5" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 5: Statik und Stammqualität -->
+            <section class="form-section">
+                <h2>Statik und Stammqualität</h2>
+                
+                <div class="form-group">
+                    <label for="neigung">Neigung *</label>
+                    <select id="neigung" name="neigung" required>
+                        <option value="">Bitte wählen...</option>
+                        <option value="Sehr geneigt (> 30° Neigung)">Sehr geneigt (> 30° Neigung)</option>
+                        <option value="Leicht geneigt (> 10° Neigung)">Leicht geneigt (> 10° Neigung)</option>
+                        <option value="Sehr gerade (< 10° Neigung)">Sehr gerade (< 10° Neigung)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="astungshoehe">Ästungshöhe in cm</label>
+                    <input type="number" id="astungshoehe" name="astungshoehe" min="100" max="10000">
+                    <small>Mindesthöhe 100 cm, nur eintragen wenn klar erkennbar</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="erster_ast">Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? (cm)</label>
+                    <input type="number" id="erster_ast" name="erster_ast" min="0" max="10000">
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s6">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s6" name="ergaenzungen_s6" rows="3" placeholder="z.B. Schlängelwuchs, Drehung, Bogen im Stammverlauf"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 6: Gehölzschutz -->
+            <section class="form-section">
+                <h2>Gehölzschutz</h2>
+                
+                <div class="form-group">
+                    <label>Art des Gehölzschutzes</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="schutz" value="kein_Gehoelzschutz"> kein Gehölzschutz</label>
+                        <label><input type="checkbox" name="schutz" value="Plastiknetz"> Plastiknetz</label>
+                        <label><input type="checkbox" name="schutz" value="Plastikspirale"> Plastikspirale</label>
+                        <label><input type="checkbox" name="schutz" value="Plastikroehre"> Plastikröhre</label>
+                        <label><input type="checkbox" name="schutz" value="unverzinktes_Metallgitter"> unverzinktes Metallgitter</label>
+                        <label><input type="checkbox" name="schutz" value="verzinktes_Metallgitter"> verzinktes Metallgitter</label>
+                        <label><input type="checkbox" name="schutz" value="andere"> andere</label>
+                    </div>
+                    <input type="text" id="schutz_andere" name="schutz_andere" placeholder="Beschreibung bei 'andere'" class="mt-1">
+                </div>
+
+                <div class="form-group">
+                    <label for="schutz_zustand">Zustand des Gehölzschutzes</label>
+                    <select id="schutz_zustand" name="schutz_zustand">
+                        <option value="">Bitte wählen...</option>
+                        <option value="nicht_vorhanden">nicht vorhanden</option>
+                        <option value="nicht_intakt">nicht intakt / funktional</option>
+                        <option value="beschaedigt_funktional">beschädigt, aber funktional</option>
+                        <option value="voll_intakt">voll intakt</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="stamm_geweisselt">Ist der Stamm geweißelt?</label>
+                    <select id="stamm_geweisselt" name="stamm_geweisselt">
+                        <option value="">Bitte wählen...</option>
+                        <option value="ja">ja</option>
+                        <option value="nein">nein</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Wie ist der Baum angebunden?</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="anbindung" value="nicht_angebunden"> nicht angebunden</label>
+                        <label><input type="checkbox" name="anbindung" value="angebunden_einschnuerend"> angebunden, aber einschnürend</label>
+                        <label><input type="checkbox" name="anbindung" value="angebunden_beweglich"> angebunden, aber zu beweglich</label>
+                        <label><input type="checkbox" name="anbindung" value="gut_angebunden"> gut angebunden</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s7">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s7" name="ergaenzungen_s7" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 7: Baumscheibe -->
+            <section class="form-section">
+                <h2>Baumscheibe</h2>
+                
+                <div class="form-group">
+                    <label>Art des Managements</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="management" value="kein_Management"> kein bestimmtes Management erkennbar</label>
+                        <label><input type="checkbox" name="management" value="freigehackt"> freigehackt, offner Boden</label>
+                        <label><input type="checkbox" name="management" value="gemulcht_Hackschnitzel"> gemulcht mit Hackschnitzeln</label>
+                        <label><input type="checkbox" name="management" value="gemulcht_Mist"> gemulcht mit Mist/Kompost</label>
+                        <label><input type="checkbox" name="management" value="gemulcht_Grasschnitt"> gemulcht mit Grasschnitt</label>
+                        <label><input type="checkbox" name="management" value="Baumscheibenvlies"> Baumscheibenvlies oder Jutestoff</label>
+                        <label><input type="checkbox" name="management" value="andere"> andere</label>
+                    </div>
+                    <input type="text" id="management_andere" name="management_andere" placeholder="Beschreibung bei 'andere'" class="mt-1">
+                </div>
+
+                <div class="form-group">
+                    <label>Zustand der Baumscheibe</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="keine_Pflanzen"> keine oder kaum andere Pflanzen</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="spaerlich"> spärlich mit anderen Pflanzen bewachsen (&lt;50% Deckung)</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="dicht"> dicht mit anderen Pflanzen bewachsen (>50% Deckung)</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="klein"> Durchmesser der Baumscheibe &lt; 60 cm</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="maeusegaenge"> Mäusegänge deutlich erkennbar</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="wurzeln"> freiliegende Wurzeln</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="weitere_Makel"> weitere Makel</label>
+                    </div>
+                    <input type="text" id="baumscheibe_makel" name="baumscheibe_makel" placeholder="Beschreibung weitere Makel" class="mt-1">
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s8">Ergänzungen/Problembeschreibungen</label>
+                    <textarea id="ergaenzungen_s8" name="ergaenzungen_s8" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 8: Schäden & Krankheiten -->
+            <section class="form-section">
+                <h2>Schnittwunden, Schäden & Krankheiten</h2>
+                
+                <div class="form-group">
+                    <label for="schnittwunden">Anzahl offener Schnittwunden (> 3 cm)</label>
+                    <input type="number" id="schnittwunden" name="schnittwunden" min="0" max="100" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Erfassung weiterer Schäden und Krankheiten</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="schaeden" value="verbissen"> verbissen (abgeschabte Rinde)</label>
+                        <label><input type="checkbox" name="schaeden" value="verfeget"> verfeget (länglich abgeschabte Rinde)</label>
+                        <label><input type="checkbox" name="schaeden" value="pfosten_schaden"> Rindenschaden an Pfosten/Verbissschutz</label>
+                        <label><input type="checkbox" name="schaeden" value="rindennekrose"> Rindennekrose (tote Rinde)</label>
+                        <label><input type="checkbox" name="schaeden" value="pilzbefall"> Pilzbefall</label>
+                        <label><input type="checkbox" name="schaeden" value="insekten"> Insektenbohrlöcher/-fraßstellen</label>
+                        <label><input type="checkbox" name="schaeden" value="frostrisse"> Frostrisse/Sonnenbrand</label>
+                        <label><input type="checkbox" name="schaeden" value="abgebrochene_Spitze"> abgebrochene Spitze</label>
+                        <label><input type="checkbox" name="schaeden" value="weitere"> weitere</label>
+                    </div>
+                    <input type="text" id="schaeden_weitere" name="schaeden_weitere" placeholder="Beschreibung weitere Schäden" class="mt-1">
+                </div>
+
+                <div class="form-group">
+                    <label for="schaeden_beschreibung">Beschreibung der Schäden und Krankheiten</label>
+                    <textarea id="schaeden_beschreibung" name="schaeden_beschreibung" rows="3" placeholder="z.B. Stamm oder Äste betroffen?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="ergaenzungen_s9">Auffälligkeiten & Ergänzungen</label>
+                    <textarea id="ergaenzungen_s9" name="ergaenzungen_s9" rows="3" placeholder="z.B. Vogelnest, Sortenschild, Nachpflanzung, untypisches Triebwachstum"></textarea>
+                </div>
+            </section>
+
+            <!-- Seite 9: Fotodokumentation -->
+            <section class="form-section">
+                <h2>Fotodokumentation</h2>
+                
+                <div class="form-group">
+                    <label for="foto">Foto von Auffälligkeiten</label>
+                    <input type="file" id="foto" name="foto" accept="image/*" capture="environment" multiple>
+                    <div id="photoPreview" class="photo-preview"></div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">✓ Baum speichern</button>
+                <button type="button" id="resetBtn" class="btn btn-secondary">↻ Formular zurücksetzen</button>
+            </div>
+        </form>
+
+        <div id="dataModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Gespeicherte Baumdaten</h2>
+                <div id="dataList"></div>
+                <button id="clearAllBtn" class="btn btn-danger">Alle Daten löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
