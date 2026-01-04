@@ -8,10 +8,28 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSavedCount();
     setupEventListeners();
     updateOnlineStatus();
+    setDefaultDate();
     
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 });
+
+// Datum und Uhrzeit standardmäßig auf jetzt setzen
+function setDefaultDate() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().substring(0, 5); // HH:MM Format
+    
+    const dateField = document.getElementById('erfassungsdatum');
+    const timeField = document.getElementById('erfassungsuhrzeit');
+    
+    if (dateField && !dateField.value) {
+        dateField.value = today;
+    }
+    if (timeField && !timeField.value) {
+        timeField.value = currentTime;
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {
@@ -29,8 +47,31 @@ function setupEventListeners() {
     const saveNextRowBtn = document.getElementById('saveNextRowBtn');
     const startNewRecordBtn = document.getElementById('startNewRecordBtn');
     const backToWelcomeBtn = document.getElementById('backToWelcomeBtn');
+    const umfangInput = document.getElementById('umfang');
+    const durchmesserInput = document.getElementById('durchmesser');
 
     form.addEventListener('submit', (e) => e.preventDefault());
+    
+    // Gegenseitiges Ausschluss-Verhalten für Umfang/Durchmesser
+    umfangInput.addEventListener('input', () => {
+        if (umfangInput.value) {
+            durchmesserInput.disabled = true;
+            durchmesserInput.style.opacity = '0.5';
+        } else {
+            durchmesserInput.disabled = false;
+            durchmesserInput.style.opacity = '1';
+        }
+    });
+    
+    durchmesserInput.addEventListener('input', () => {
+        if (durchmesserInput.value) {
+            umfangInput.disabled = true;
+            umfangInput.style.opacity = '0.5';
+        } else {
+            umfangInput.disabled = false;
+            umfangInput.style.opacity = '1';
+        }
+    });
     saveFinishBtn.addEventListener('click', () => saveTree('finish'));
     saveNextTreeBtn.addEventListener('click', () => saveTree('nextTree'));
     saveNextRowBtn.addEventListener('click', () => saveTree('nextRow'));
@@ -74,13 +115,41 @@ function saveTree(action) {
         return;
     }
     
+    // Plausibilitätsprüfungen
+    const hoehe = parseInt(document.getElementById('hoehe').value);
+    const astungshoehe = document.getElementById('astungshoehe').value;
+    const ersterAst = document.getElementById('erster_ast').value;
+    
+    if (astungshoehe && parseInt(astungshoehe) > hoehe) {
+        if (!confirm(`⚠️ Die Ästungshöhe (${astungshoehe} cm) ist größer als die Baumhöhe (${hoehe} cm). Trotzdem speichern?`)) {
+            return;
+        }
+    }
+    
+    if (ersterAst && parseInt(ersterAst) > hoehe) {
+        if (!confirm(`⚠️ Die Höhe des ersten Astes (${ersterAst} cm) ist größer als die Baumhöhe (${hoehe} cm). Trotzdem speichern?`)) {
+            return;
+        }
+    }
+    
+    // Umfang und Durchmesser Warnung
+    const umfang = document.getElementById('umfang').value;
+    const durchmesser = document.getElementById('durchmesser').value;
+    if (umfang && durchmesser) {
+        if (!confirm(`⚠️ Sowohl Umfang als auch Durchmesser wurden angegeben. In der Regel sollte nur eines der Felder ausgefüllt werden. Trotzdem speichern?`)) {
+            return;
+        }
+    }
+    
     const formData = new FormData(form);
     const tree = {};
     
     // Datum und Zeit
-    const now = new Date();
-    tree.CreationDate = now.toISOString().split('T')[0];
-    tree.Jahr = now.getFullYear();
+    const erfassungsdatum = formData.get('erfassungsdatum');
+    const erfassungsuhrzeit = formData.get('erfassungsuhrzeit');
+    tree.CreationDate = erfassungsdatum || new Date().toISOString().split('T')[0];
+    tree.Erfassungsuhrzeit = erfassungsuhrzeit || new Date().toTimeString().substring(0, 5);
+    tree.Jahr = new Date(tree.CreationDate).getFullYear();
     
     // Standard-Felder
     tree.x = formData.get('longitude') || '0';
@@ -132,7 +201,6 @@ function saveTree(action) {
     tree['Ergänzungen/Problembeschreibungen (S. 6)'] = formData.get('ergaenzungen_s6') || '';
     tree['Ergänzungen/Problembeschreibungen (S. 7)'] = formData.get('ergaenzungen_s7') || '';
     tree['Ergänzungen/Problembeschreibungen (S.8)'] = formData.get('ergaenzungen_s8') || '';
-    tree['Auffälligkeiten im Freifeld notieren'] = formData.get('ergaenzungen_s9') || '';
     tree['Ergänzungen/Problembeschreibungen (S.9)'] = formData.get('ergaenzungen_s9') || '';
     
     // Fotos
@@ -145,6 +213,18 @@ function saveTree(action) {
     saveTreesToStorage();
     updateSavedCount();
     
+    // LocalStorage Warnung
+    checkStorageUsage();
+    
+    // Backup-Reminder
+    if (trees.length % 50 === 0 && trees.length > 0) {
+        setTimeout(() => {
+            if (confirm(`💾 Sie haben jetzt ${trees.length} Bäume erfasst!\n\nMöchten Sie jetzt ein Backup (CSV-Export) erstellen?`)) {
+                exportToCSV();
+            }
+        }, 500);
+    }
+    
     // Feedback
     const baumId = tree['ID (z.B. "LRO-B-9")'];
     alert(`✓ Baum ${baumId} erfolgreich gespeichert!`);
@@ -152,6 +232,8 @@ function saveTree(action) {
     // Je nach Aktion unterschiedlich verhalten
     const currentName = formData.get('name');
     const currentBaumart = formData.get('baumart');
+    const currentDatum = formData.get('erfassungsdatum');
+    const currentUhrzeit = formData.get('erfassungsuhrzeit');
     
     // Gehölzschutz-Werte speichern
     const currentSchutz = Array.from(formData.getAll('schutz'));
@@ -173,6 +255,9 @@ function saveTree(action) {
         // Baum-ID hochzählen
         const nextId = incrementTreeId(baumId);
         resetForm();
+        setDefaultDate();
+        document.getElementById('erfassungsdatum').value = currentDatum;
+        document.getElementById('erfassungsuhrzeit').value = currentUhrzeit;
         document.getElementById('name').value = currentName;
         document.getElementById('baumart').value = currentBaumart;
         document.getElementById('baumId').value = nextId;
@@ -203,6 +288,9 @@ function saveTree(action) {
         // Reihe hochzählen
         const nextId = incrementRowId(baumId);
         resetForm();
+        setDefaultDate();
+        document.getElementById('erfassungsdatum').value = currentDatum;
+        document.getElementById('erfassungsuhrzeit').value = currentUhrzeit;
         document.getElementById('name').value = currentName;
         document.getElementById('baumart').value = currentBaumart;
         document.getElementById('baumId').value = nextId;
@@ -268,6 +356,18 @@ function resetForm() {
     document.getElementById('locationDisplay').classList.remove('active');
     document.getElementById('photoPreview').innerHTML = '';
     photos = [];
+    
+    // Umfang/Durchmesser Felder wieder aktivieren
+    const umfangInput = document.getElementById('umfang');
+    const durchmesserInput = document.getElementById('durchmesser');
+    if (umfangInput) {
+        umfangInput.disabled = false;
+        umfangInput.style.opacity = '1';
+    }
+    if (durchmesserInput) {
+        durchmesserInput.disabled = false;
+        durchmesserInput.style.opacity = '1';
+    }
 }
 
 // GPS Location
@@ -333,7 +433,30 @@ function handlePhotoUpload(e) {
 
 // Storage
 function saveTreesToStorage() {
-    localStorage.setItem('baumentwicklung_trees', JSON.stringify(trees));
+    try {
+        localStorage.setItem('baumentwicklung_trees', JSON.stringify(trees));
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            alert('⚠️ Speicher ist voll! Bitte exportieren Sie Ihre Daten als CSV und löschen Sie alte Einträge.');
+        } else {
+            alert('Fehler beim Speichern: ' + e.message);
+        }
+    }
+}
+
+// LocalStorage-Nutzung prüfen
+function checkStorageUsage() {
+    try {
+        const totalSize = new Blob([JSON.stringify(trees)]).size;
+        const maxSize = 5 * 1024 * 1024; // 5MB geschätzte Grenze
+        const usagePercent = (totalSize / maxSize) * 100;
+        
+        if (usagePercent > 80) {
+            alert(`⚠️ Speicherwarnung: ${usagePercent.toFixed(0)}% des Speichers belegt.\n\nBitte erstellen Sie bald ein CSV-Backup und löschen Sie alte Einträge.`);
+        }
+    } catch (e) {
+        console.error('Fehler bei Speicherprüfung:', e);
+    }
 }
 
 function loadTreesFromStorage() {
@@ -356,7 +479,7 @@ function exportToCSV() {
     
     // CSV Header
     const headers = [
-        'CreationDate', 'x', 'y', 'Jahr',
+        'CreationDate', 'Erfassungsuhrzeit', 'x', 'y', 'Jahr',
         'ID (z.B. "LRO-B-9")',
         'Name(n) der durchführenden Person(en)',
         'Untersuchte Baumart',
@@ -406,8 +529,9 @@ function exportToCSV() {
         csv += row.join('\t') + '\n';
     });
     
-    // Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Download mit BOM für Excel-Kompatibilität
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     const date = new Date().toISOString().split('T')[0];
