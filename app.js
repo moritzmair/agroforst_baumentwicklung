@@ -27,6 +27,8 @@ function setupEventListeners() {
     const saveFinishBtn = document.getElementById('saveFinishBtn');
     const saveNextTreeBtn = document.getElementById('saveNextTreeBtn');
     const saveNextRowBtn = document.getElementById('saveNextRowBtn');
+    const startNewRecordBtn = document.getElementById('startNewRecordBtn');
+    const backToWelcomeBtn = document.getElementById('backToWelcomeBtn');
 
     form.addEventListener('submit', (e) => e.preventDefault());
     saveFinishBtn.addEventListener('click', () => saveTree('finish'));
@@ -41,12 +43,27 @@ function setupEventListeners() {
     fotoInput.addEventListener('change', handlePhotoUpload);
     closeBtn.addEventListener('click', () => modal.classList.remove('active'));
     clearAllBtn.addEventListener('click', clearAllData);
+    startNewRecordBtn.addEventListener('click', showFormScreen);
+    backToWelcomeBtn.addEventListener('click', showWelcomeScreen);
     
     window.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.classList.remove('active');
         }
     });
+}
+
+// Screen Navigation
+function showWelcomeScreen() {
+    document.getElementById('welcomeScreen').style.display = 'block';
+    document.getElementById('treeForm').style.display = 'none';
+    document.getElementById('backToWelcomeBtn').style.display = 'none';
+}
+
+function showFormScreen() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('treeForm').style.display = 'block';
+    document.getElementById('backToWelcomeBtn').style.display = 'inline-block';
 }
 
 // Form Submit
@@ -150,7 +167,8 @@ function saveTree(action) {
     const currentBaumscheibeMakel = formData.get('baumscheibe_makel');
     
     if (action === 'finish') {
-        // Nichts tun - Daten bleiben im Formular
+        // Zurück zur Startseite
+        showWelcomeScreen();
     } else if (action === 'nextTree') {
         // Baum-ID hochzählen
         const nextId = incrementTreeId(baumId);
@@ -471,6 +489,7 @@ function editTree(index) {
     const tree = trees[index];
     loadTreeToForm(tree, true);
     document.getElementById('dataModal').classList.remove('active');
+    showFormScreen();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -482,6 +501,7 @@ function nextTreeInRow(index) {
     loadTreeToForm(tree, false);
     document.getElementById('baumId').value = nextId;
     document.getElementById('dataModal').classList.remove('active');
+    showFormScreen();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -493,6 +513,7 @@ function nextTreeInNextRow(index) {
     loadTreeToForm(tree, false);
     document.getElementById('baumId').value = nextId;
     document.getElementById('dataModal').classList.remove('active');
+    showFormScreen();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

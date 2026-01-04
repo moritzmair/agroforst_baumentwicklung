@@ -22,12 +22,63 @@
             <span id="savedCount">0 Bäume gespeichert</span>
         </div>
 
+        <!-- Startseite -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <div class="welcome-content">
+                <div class="project-info">
+                    <h2>🌾 Über agroforst-monitoring</h2>
+                    <p>Diese App ist Teil des <strong>agroforst-monitoring</strong>, einem bürgerwissenschaftlichen Forschungsnetzwerk zur Langzeit-Erforschung moderner Agroforst-Ökosysteme – landwirtschaftlich genutzte Flächen, auf denen Bäume mit Acker, Wiese oder Weide kombiniert werden.</p>
+                    <p>Ziel ist es, über viele Jahre ökologische und ökonomie-bezogene Veränderungen dieser Systeme zu beobachten und Daten über Boden, Pflanzen, Tiere und Baumwachstum zu sammeln.</p>
+                    <p>
+                        <a href="https://agroforst-monitoring.de/" target="_blank" rel="noopener noreferrer" class="project-link">
+                            🌐 Mehr Infos auf agroforst-monitoring.de
+                        </a>
+                    </p>
+                </div>
+
+                <h2>📱 App Installation</h2>
+                
+                <div class="install-section">
+                    <h3>🤖 Android</h3>
+                    <ol>
+                        <li>Öffne diese Seite in Chrome</li>
+                        <li>Tippe auf das Menü (⋮) oben rechts</li>
+                        <li>Wähle "Zum Startbildschirm hinzufügen"</li>
+                        <li>Bestätige mit "Hinzufügen"</li>
+                    </ol>
+                </div>
+
+                <div class="install-section">
+                    <h3>🍎 iOS (iPhone/iPad)</h3>
+                    <ol>
+                        <li>Öffne diese Seite in Safari</li>
+                        <li>Tippe auf das Teilen-Symbol (
+                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;" viewBox="0 0 50 50">
+                                <path fill="currentColor" d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z"/>
+                                <path fill="currentColor" d="M24 7h2v21h-2z"/>
+                                <path fill="currentColor" d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z"/>
+                            </svg>
+                        )</li>
+                        <li>Scrolle nach unten und wähle "Zum Home-Bildschirm"</li>
+                        <li>Bestätige mit "Hinzufügen"</li>
+                    </ol>
+                </div>
+
+                <div class="install-note">
+                    <p>💡 Nach der Installation kannst du die App offline nutzen!</p>
+                </div>
+
+                <button id="startNewRecordBtn" class="btn btn-primary btn-large">🌳 Neue Erfassung starten</button>
+            </div>
+        </div>
+
         <div class="action-buttons">
             <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
             <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
+            <button id="backToWelcomeBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
         </div>
 
-        <form id="treeForm">
+        <form id="treeForm" style="display:none;">
             <!-- Seite 1: ID und Standort -->
             <section class="form-section">
                 <h2>ID und Standort</h2>
