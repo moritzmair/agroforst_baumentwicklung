@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Event Listeners
 function setupEventListeners() {
     const form = document.getElementById('treeForm');
-    const copyPrevBtn = document.getElementById('copyPrevBtn');
     const exportBtn = document.getElementById('exportBtn');
     const viewDataBtn = document.getElementById('viewDataBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -25,9 +24,14 @@ function setupEventListeners() {
     const modal = document.getElementById('dataModal');
     const closeBtn = document.querySelector('#dataModal .close');
     const clearAllBtn = document.getElementById('clearAllBtn');
+    const saveFinishBtn = document.getElementById('saveFinishBtn');
+    const saveNextTreeBtn = document.getElementById('saveNextTreeBtn');
+    const saveNextRowBtn = document.getElementById('saveNextRowBtn');
 
-    form.addEventListener('submit', handleSubmit);
-    copyPrevBtn.addEventListener('click', copyPreviousData);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    saveFinishBtn.addEventListener('click', () => saveTree('finish'));
+    saveNextTreeBtn.addEventListener('click', () => saveTree('nextTree'));
+    saveNextRowBtn.addEventListener('click', () => saveTree('nextRow'));
     exportBtn.addEventListener('click', exportToCSV);
     viewDataBtn.addEventListener('click', () => {
         showDataModal();
@@ -46,10 +50,14 @@ function setupEventListeners() {
 }
 
 // Form Submit
-function handleSubmit(e) {
-    e.preventDefault();
+function saveTree(action) {
+    const form = document.getElementById('treeForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
     
-    const formData = new FormData(e.target);
+    const formData = new FormData(form);
     const tree = {};
     
     // Datum und Zeit
@@ -121,64 +129,119 @@ function handleSubmit(e) {
     updateSavedCount();
     
     // Feedback
-    alert(`✓ Baum ${tree['ID (z.B. "LRO-B-9")']} erfolgreich gespeichert!`);
+    const baumId = tree['ID (z.B. "LRO-B-9")'];
+    alert(`✓ Baum ${baumId} erfolgreich gespeichert!`);
     
-    // Form zurücksetzen aber Name behalten
+    // Je nach Aktion unterschiedlich verhalten
     const currentName = formData.get('name');
     const currentBaumart = formData.get('baumart');
-    resetForm();
-    document.getElementById('name').value = currentName;
-    document.getElementById('baumart').value = currentBaumart;
-    photos = [];
+    
+    // Gehölzschutz-Werte speichern
+    const currentSchutz = Array.from(formData.getAll('schutz'));
+    const currentSchutzAndere = formData.get('schutz_andere');
+    const currentSchutzZustand = formData.get('schutz_zustand');
+    const currentStammGeweisselt = formData.get('stamm_geweisselt');
+    const currentAnbindung = Array.from(formData.getAll('anbindung'));
+    
+    // Baumscheibe-Werte speichern
+    const currentManagement = Array.from(formData.getAll('management'));
+    const currentManagementAndere = formData.get('management_andere');
+    const currentBaumscheibeZustand = Array.from(formData.getAll('baumscheibe_zustand'));
+    const currentBaumscheibeMakel = formData.get('baumscheibe_makel');
+    
+    if (action === 'finish') {
+        // Nichts tun - Daten bleiben im Formular
+    } else if (action === 'nextTree') {
+        // Baum-ID hochzählen
+        const nextId = incrementTreeId(baumId);
+        resetForm();
+        document.getElementById('name').value = currentName;
+        document.getElementById('baumart').value = currentBaumart;
+        document.getElementById('baumId').value = nextId;
+        
+        // Gehölzschutz wiederherstellen
+        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+            cb.checked = currentSchutz.includes(cb.value);
+        });
+        document.getElementById('schutz_andere').value = currentSchutzAndere || '';
+        document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
+        document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
+        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+            cb.checked = currentAnbindung.includes(cb.value);
+        });
+        
+        // Baumscheibe wiederherstellen
+        document.querySelectorAll('input[name="management"]').forEach(cb => {
+            cb.checked = currentManagement.includes(cb.value);
+        });
+        document.getElementById('management_andere').value = currentManagementAndere || '';
+        document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+            cb.checked = currentBaumscheibeZustand.includes(cb.value);
+        });
+        document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
+        
+        photos = [];
+    } else if (action === 'nextRow') {
+        // Reihe hochzählen
+        const nextId = incrementRowId(baumId);
+        resetForm();
+        document.getElementById('name').value = currentName;
+        document.getElementById('baumart').value = currentBaumart;
+        document.getElementById('baumId').value = nextId;
+        
+        // Gehölzschutz wiederherstellen
+        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+            cb.checked = currentSchutz.includes(cb.value);
+        });
+        document.getElementById('schutz_andere').value = currentSchutzAndere || '';
+        document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
+        document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
+        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+            cb.checked = currentAnbindung.includes(cb.value);
+        });
+        
+        // Baumscheibe wiederherstellen
+        document.querySelectorAll('input[name="management"]').forEach(cb => {
+            cb.checked = currentManagement.includes(cb.value);
+        });
+        document.getElementById('management_andere').value = currentManagementAndere || '';
+        document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+            cb.checked = currentBaumscheibeZustand.includes(cb.value);
+        });
+        document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
+        
+        photos = [];
+    }
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Copy Previous Data
-function copyPreviousData() {
-    if (trees.length === 0) {
-        alert('Noch keine Bäume gespeichert.');
-        return;
+// ID-Hilfsfunktionen
+function incrementTreeId(baumId) {
+    // z.B. "LRO-B-9" -> "LRO-B-10"
+    const match = baumId.match(/^([A-Z]+-[A-Z]+-)(\d+)(\.\d+)?$/);
+    if (match) {
+        const prefix = match[1];
+        const number = parseInt(match[2]) + 1;
+        const suffix = match[3] || '';
+        return prefix + number + suffix;
     }
-    
-    const lastTree = trees[trees.length - 1];
-    
-    // Felder ausfüllen
-    document.getElementById('name').value = lastTree['Name(n) der durchführenden Person(en)'] || '';
-    document.getElementById('baumart').value = lastTree['Untersuchte Baumart'] || '';
-    
-    // Gehölzschutz
-    if (lastTree['Art des Gehölzschutzes']) {
-        const schutzTypes = lastTree['Art des Gehölzschutzes'].split(',');
-        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
-            cb.checked = schutzTypes.includes(cb.value);
-        });
+    return baumId;
+}
+
+function incrementRowId(baumId) {
+    // z.B. "LRO-B-9" -> "LRO-C-1"
+    const match = baumId.match(/^([A-Z]+-)([A-Z]+)(-)(\d+)(\.\d+)?$/);
+    if (match) {
+        const prefix = match[1];
+        const row = match[2];
+        const separator = match[3];
+        const suffix = match[5] || '';
+        const nextRow = String.fromCharCode(row.charCodeAt(row.length - 1) + 1);
+        return prefix + (row.slice(0, -1) + nextRow) + separator + '1' + suffix;
     }
-    document.getElementById('schutz_zustand').value = lastTree['Zustand des Gehölzschutzes'] || '';
-    document.getElementById('stamm_geweisselt').value = lastTree['Ist der Stamm geweißelt?'] || '';
-    
-    // Anbindung
-    if (lastTree['Wie ist der Baum angebunden?']) {
-        const anbindung = lastTree['Wie ist der Baum angebunden?'].split(',');
-        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
-            cb.checked = anbindung.includes(cb.value);
-        });
-    }
-    
-    // Management
-    if (lastTree['Art des Managements']) {
-        const management = lastTree['Art des Managements'].split(',');
-        document.querySelectorAll('input[name="management"]').forEach(cb => {
-            cb.checked = management.includes(cb.value);
-        });
-    }
-    
-    // Neigung
-    document.getElementById('neigung').value = lastTree['Neigung'] || '';
-    
-    alert('✓ Daten vom vorherigen Baum übernommen!');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return baumId;
 }
 
 // Reset Form
@@ -352,19 +415,47 @@ function showDataModal() {
     } else {
         document.getElementById('treeMap').style.display = 'block';
         
-        dataList.innerHTML = trees.map((tree, index) => `
-            <div class="data-item">
-                <h3>${tree['ID (z.B. "LRO-B-9")']}</h3>
-                <p><strong>Baumart:</strong> ${tree['Untersuchte Baumart']}</p>
-                <p><strong>Datum:</strong> ${tree.CreationDate}</p>
-                <p><strong>Höhe:</strong> ${tree['Höhe in XXX cm']} cm</p>
-                <p><strong>Position:</strong> ${tree.y && tree.x && parseFloat(tree.y) !== 0 ? `${tree.y}, ${tree.x}` : 'Keine GPS-Daten'}</p>
-                <p><strong>Person:</strong> ${tree['Name(n) der durchführenden Person(en)']}</p>
-                <div class="data-item-actions">
-                    <button class="btn btn-secondary" onclick="deleteTree(${index})">🗑️ Löschen</button>
+        // Gruppiere Bäume nach ID
+        const grouped = {};
+        trees.forEach((tree, index) => {
+            const id = tree['ID (z.B. "LRO-B-9")'];
+            if (!grouped[id]) {
+                grouped[id] = [];
+            }
+            grouped[id].push({ tree, index });
+        });
+        
+        // Sortiere IDs
+        const sortedIds = Object.keys(grouped).sort();
+        
+        // HTML generieren
+        dataList.innerHTML = sortedIds.map(id => {
+            const entries = grouped[id];
+            const isDuplicate = entries.length > 1;
+            
+            return `
+                <div class="data-group${isDuplicate ? ' duplicate-group' : ''}">
+                    <h3 class="data-group-header">${id}${isDuplicate ? ` <span style="color:#f44336;font-size:0.9em;">(${entries.length}x erfasst)</span>` : ''}</h3>
+                    <div class="data-group-items">
+                        ${entries.map(({ tree, index }) => `
+                            <div class="data-item${isDuplicate ? ' duplicate-item' : ''}">
+                                <p><strong>Baumart:</strong> ${tree['Untersuchte Baumart']}</p>
+                                <p><strong>Datum:</strong> ${tree.CreationDate}</p>
+                                <p><strong>Höhe:</strong> ${tree['Höhe in XXX cm']} cm</p>
+                                <p><strong>Position:</strong> ${tree.y && tree.x && parseFloat(tree.y) !== 0 ? `${tree.y}, ${tree.x}` : 'Keine GPS-Daten'}</p>
+                                <p><strong>Person:</strong> ${tree['Name(n) der durchführenden Person(en)']}</p>
+                                <div class="data-item-actions">
+                                    <button class="btn btn-primary" onclick="editTree(${index})">✏️ Bearbeiten</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInRow(${index})">➡️ Nächster</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInNextRow(${index})">⏩ Nächste Reihe</button>
+                                    <button class="btn btn-secondary" onclick="deleteTree(${index})">🗑️ Löschen</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
     
     modal.classList.add('active');
@@ -373,6 +464,130 @@ function showDataModal() {
     if (trees.length > 0) {
         setTimeout(() => drawTreeMap(), 100);
     }
+}
+
+// Baum bearbeiten
+function editTree(index) {
+    const tree = trees[index];
+    loadTreeToForm(tree, true);
+    document.getElementById('dataModal').classList.remove('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Nächster Baum in Reihe
+function nextTreeInRow(index) {
+    const tree = trees[index];
+    const baumId = tree['ID (z.B. "LRO-B-9")'];
+    const nextId = incrementTreeId(baumId);
+    loadTreeToForm(tree, false);
+    document.getElementById('baumId').value = nextId;
+    document.getElementById('dataModal').classList.remove('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Nächster Baum in nächster Reihe
+function nextTreeInNextRow(index) {
+    const tree = trees[index];
+    const baumId = tree['ID (z.B. "LRO-B-9")'];
+    const nextId = incrementRowId(baumId);
+    loadTreeToForm(tree, false);
+    document.getElementById('baumId').value = nextId;
+    document.getElementById('dataModal').classList.remove('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Baumdaten ins Formular laden
+function loadTreeToForm(tree, loadMeasurements = true) {
+    // Basis-Felder
+    document.getElementById('name').value = tree['Name(n) der durchführenden Person(en)'] || '';
+    document.getElementById('baumart').value = tree['Untersuchte Baumart'] || '';
+    document.getElementById('baumId').value = tree['ID (z.B. "LRO-B-9")'] || '';
+    
+    // Messungen nur laden wenn gewünscht (beim Bearbeiten, nicht beim nächsten Baum)
+    if (loadMeasurements) {
+        document.getElementById('hoehe').value = tree['Höhe in XXX cm'] || '';
+        document.getElementById('umfang').value = tree['Umfang in XXX mm (Standard)'] || '';
+        document.getElementById('durchmesser').value = tree['Durchmesser in XXX mm (falls Umfang nicht möglich)'] || '';
+        document.getElementById('trieblaenge').value = tree['Durchschnittliche Länge der einjährigen Triebe in XXX cm'] || '';
+        document.getElementById('neigung').value = tree['Neigung'] || '';
+        document.getElementById('astungshoehe').value = tree['Ästungshöhe in XXX cm'] || '';
+        document.getElementById('erster_ast').value = tree['Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm'] || '';
+        document.getElementById('schnittwunden').value = tree['Anzahl offener Schnittwunden'] || '0';
+    } else {
+        document.getElementById('hoehe').value = '';
+        document.getElementById('umfang').value = '';
+        document.getElementById('durchmesser').value = '';
+        document.getElementById('trieblaenge').value = '';
+        document.getElementById('astungshoehe').value = '';
+        document.getElementById('erster_ast').value = '';
+        document.getElementById('schnittwunden').value = '0';
+    }
+    
+    // GPS
+    document.getElementById('latitude').value = tree.y || '';
+    document.getElementById('longitude').value = tree.x || '';
+    if (tree.y && tree.x && parseFloat(tree.y) !== 0) {
+        const display = document.getElementById('locationDisplay');
+        display.textContent = `📍 Position: ${tree.y}, ${tree.x}`;
+        display.classList.add('active');
+    }
+    
+    // Gehölzschutz
+    if (tree['Art des Gehölzschutzes']) {
+        const schutzTypes = tree['Art des Gehölzschutzes'].split(',').filter(v => v);
+        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+            cb.checked = schutzTypes.includes(cb.value);
+        });
+    }
+    document.getElementById('schutz_andere').value = tree['andere - Art des Gehölzschutzes'] || '';
+    document.getElementById('schutz_zustand').value = tree['Zustand des Gehölzschutzes'] || '';
+    document.getElementById('stamm_geweisselt').value = tree['Ist der Stamm geweißelt?'] || '';
+    
+    // Anbindung
+    if (tree['Wie ist der Baum angebunden?']) {
+        const anbindung = tree['Wie ist der Baum angebunden?'].split(',').filter(v => v);
+        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+            cb.checked = anbindung.includes(cb.value);
+        });
+    }
+    
+    // Management
+    if (tree['Art des Managements']) {
+        const management = tree['Art des Managements'].split(',').filter(v => v);
+        document.querySelectorAll('input[name="management"]').forEach(cb => {
+            cb.checked = management.includes(cb.value);
+        });
+    }
+    document.getElementById('management_andere').value = tree['andere - Art des Managements'] || '';
+    
+    // Baumscheibe
+    if (tree['Zustand der Baumscheibe']) {
+        const baumscheibeZustand = tree['Zustand der Baumscheibe'].split(',').filter(v => v);
+        document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+            cb.checked = baumscheibeZustand.includes(cb.value);
+        });
+    }
+    document.getElementById('baumscheibe_makel').value = tree['weitere Makel - Zustand der Baumscheibe'] || '';
+    
+    // Schäden
+    if (tree['Erfassung weiterer Schäden und Krankheiten']) {
+        const schaeden = tree['Erfassung weiterer Schäden und Krankheiten'].split(',').filter(v => v);
+        document.querySelectorAll('input[name="schaeden"]').forEach(cb => {
+            cb.checked = schaeden.includes(cb.value);
+        });
+    }
+    document.getElementById('schaeden_weitere').value = tree['weitere - Erfassung weiterer Schäden und Krankheiten'] || '';
+    document.getElementById('schaeden_beschreibung').value = tree['Beschreibung der Schäden und Krankheiten'] || '';
+    
+    // Ergänzungen
+    document.getElementById('ergaenzungen_s2').value = tree['Ergänzungen/Problembeschreibungen (S. 2)'] || '';
+    document.getElementById('ergaenzungen_s3').value = tree['Ergänzungen/Problembeschreibungen (S. 3)'] || '';
+    document.getElementById('ergaenzungen_s4').value = tree['Ergänzungen/Problembeschreibungen (S. 4)'] || '';
+    document.getElementById('ergaenzungen_s5').value = tree['Ergänzungen/Problembeschreibungen (S.5)'] || '';
+    document.getElementById('ergaenzungen_s6').value = tree['Ergänzungen/Problembeschreibungen (S. 6)'] || '';
+    document.getElementById('ergaenzungen_s7').value = tree['Ergänzungen/Problembeschreibungen (S. 7)'] || '';
+    document.getElementById('ergaenzungen_s8').value = tree['Ergänzungen/Problembeschreibungen (S.8)'] || '';
+    document.getElementById('ergaenzungen_s9').value = tree['Ergänzungen/Problembeschreibungen (S.9)'] || tree['Auffälligkeiten im Freifeld notieren'] || '';
 }
 
 // Generate color from string

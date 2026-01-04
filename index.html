@@ -23,7 +23,6 @@
         </div>
 
         <div class="action-buttons">
-            <button id="copyPrevBtn" class="btn btn-secondary">📋 vorherige Daten übernehmen</button>
             <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
             <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
         </div>
@@ -312,7 +311,9 @@
             </section>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">✓ Baum speichern</button>
+                <button type="button" id="saveFinishBtn" class="btn btn-primary">✓ Speichern und abschließen</button>
+                <button type="button" id="saveNextTreeBtn" class="btn btn-primary">➡️ Speichern und nächster Baum</button>
+                <button type="button" id="saveNextRowBtn" class="btn btn-primary">⏩ Speichern und nächste Reihe</button>
                 <button type="button" id="resetBtn" class="btn btn-secondary">↻ Formular zurücksetzen</button>
             </div>
         </form>

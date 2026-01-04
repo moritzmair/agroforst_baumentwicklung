@@ -301,12 +301,43 @@ header h1 {
     margin: 1.5rem 0;
 }
 
-.data-item {
-    background: #f5f5f5;
+.data-group {
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-group-header {
+    background: var(--primary);
+    color: var(--white);
+    padding: 0.75rem 1rem;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.duplicate-group .data-group-header {
+    background: #f44336;
+}
+
+.data-group-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
     padding: 1rem;
-    margin-bottom: 1rem;
+    background: #fafafa;
+}
+
+.data-item {
+    background: #ffffff;
+    padding: 1rem;
     border-radius: 8px;
     border-left: 4px solid var(--primary);
+    flex: 1;
+    min-width: 300px;
+}
+
+.duplicate-item {
+    border-left-color: #f44336;
 }
 
 .data-item h3 {
@@ -320,14 +351,17 @@ header h1 {
 }
 
 .data-item-actions {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .data-item-actions button {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    flex: 1;
+    min-width: 100px;
 }
 
 @media (max-width: 600px) {
