@@ -532,7 +532,8 @@ input[type="file"] {
     border: 2px solid var(--border);
     border-radius: 4px;
     background: #fafafa;
-    cursor: crosshair;
+    cursor: grab;
+    touch-action: none;
 }
 
 .map-legend {

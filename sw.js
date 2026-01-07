@@ -1,9 +1,19 @@
-const CACHE_NAME = 'baumentwicklung-v1';
+const CACHE_NAME = 'baumentwicklung-v3';
 const urlsToCache = [
     './',
     './index.html',
     './styles.css',
-    './app.js',
+    './js/app.js',
+    './js/state.js',
+    './js/storage.js',
+    './js/helpers.js',
+    './js/navigation.js',
+    './js/gps.js',
+    './js/photos.js',
+    './js/csv.js',
+    './js/map.js',
+    './js/form.js',
+    './js/help.js',
     './manifest.json',
     './images/trieb.jpg',
     './images/foerstner_kalibration.jpg',

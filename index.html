@@ -22,6 +22,12 @@
             <span id="savedCount">0 Bäume gespeichert</span>
         </div>
 
+        <div class="action-buttons">
+            <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
+            <button id="backToWelcomeBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
+            <button id="backFromDataBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
+        </div>
+
         <!-- Startseite -->
         <div id="welcomeScreen" class="welcome-screen">
             <div class="welcome-content">
@@ -36,7 +42,9 @@
                     </p>
                 </div>
 
-                <h2>📱 App Installation</h2>
+                <button id="startNewRecordBtn" class="btn btn-primary btn-large">🌳 Neue Erfassung starten</button>
+
+                <h2 style="margin-top: 2.5rem;">📱 App Installation</h2>
                 
                 <div class="install-section">
                     <h3>🤖 Android</h3>
@@ -68,14 +76,8 @@
                     <p>💡 Nach der Installation kannst du die App offline nutzen!</p>
                 </div>
 
-                <button id="startNewRecordBtn" class="btn btn-primary btn-large">🌳 Neue Erfassung starten</button>
+                
             </div>
-        </div>
-
-        <div class="action-buttons">
-            <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
-            <button id="backToWelcomeBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
-            <button id="backFromDataBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
         </div>
 
         <form id="treeForm" style="display:none;">
@@ -397,6 +399,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
