@@ -88,8 +88,15 @@ export function exportToCSV() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
-    // Zeitstempel mit Datum und Uhrzeit: 2026-01-07_08-07-01
-    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '').replace('T', '_');
+    // Zeitstempel mit Datum und Uhrzeit in lokaler Zeitzone: 2026-01-07_08-07-01
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timestamp = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
     
     link.setAttribute('href', url);
     link.setAttribute('download', `Baumentwicklung_${timestamp}.csv`);
