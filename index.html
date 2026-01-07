@@ -14,7 +14,7 @@
     <div class="container">
         <header>
             <h1>🌳 Baumentwicklung</h1>
-            <p class="subtitle">Agroforst Monitoring</p>
+            <p class="subtitle">agroforst-monitoring</p>
         </header>
 
         <div class="status-bar">
@@ -84,18 +84,6 @@
                 <h2>ID und Standort</h2>
                 
                 <div class="form-group">
-                    <label for="erfassungsdatum">Erfassungsdatum *</label>
-                    <input type="date" id="erfassungsdatum" name="erfassungsdatum" required>
-                    <small>Datum der Feldaufnahme (wird automatisch auf heute gesetzt)</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="erfassungsuhrzeit">Erfassungsuhrzeit *</label>
-                    <input type="time" id="erfassungsuhrzeit" name="erfassungsuhrzeit" required>
-                    <small>Uhrzeit der Feldaufnahme (wird automatisch auf jetzt gesetzt)</small>
-                </div>
-                
-                <div class="form-group">
                     <label for="name">Name der durchführenden Person(en) *</label>
                     <input type="text" id="name" name="name" required>
                 </div>
@@ -119,7 +107,7 @@
                         Baum-ID (z.B. "LRO-B-9") *
                         <button type="button" class="help-btn" onclick="showHelp('baumId')">?</button>
                     </label>
-                    <input type="text" id="baumId" name="baumId" placeholder="LRO-B-9" required pattern="[A-Z]+-[A-Z]+-[0-9]+(\.[0-9]+)?">
+                    <input type="text" id="baumId" name="baumId" placeholder="LRO-B-9" required pattern="[A-ZÄÖÜ]+-[A-ZÄÖÜ]+-[0-9]+(\.[0-9]+)?">
                     <small>Format: Lokalgruppe-Reihe-Nummer (z.B. LRO-B-9 oder DA-C-2.1)</small>
                 </div>
 
@@ -158,7 +146,7 @@
 
             <!-- Seite 3: Brusthöhenumfang -->
             <section class="form-section">
-                <h2>Brusthöhenumfang (1,3m)</h2>
+                <h2>Brusthöhenumfang (1,3 m)</h2>
                 
                 <div class="form-group">
                     <label for="umfang">Umfang in mm (Standard)</label>
@@ -296,7 +284,7 @@
                     <label>Art des Managements</label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="management" value="kein_Management"> kein bestimmtes Management erkennbar</label>
-                        <label><input type="checkbox" name="management" value="freigehackt"> freigehackt, offner Boden</label>
+                        <label><input type="checkbox" name="management" value="freigehackt"> freigehackt, offener Boden</label>
                         <label><input type="checkbox" name="management" value="gemulcht_Hackschnitzel"> gemulcht mit Hackschnitzeln</label>
                         <label><input type="checkbox" name="management" value="gemulcht_Mist"> gemulcht mit Mist/Kompost</label>
                         <label><input type="checkbox" name="management" value="gemulcht_Grasschnitt"> gemulcht mit Grasschnitt</label>
@@ -310,9 +298,9 @@
                     <label>Zustand der Baumscheibe</label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="baumscheibe_zustand" value="keine_Pflanzen"> keine oder kaum andere Pflanzen</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="spaerlich"> spärlich mit anderen Pflanzen bewachsen (&lt;50% Deckung)</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="spaerlich"> spärlich mit anderen Pflanzen bewachsen (<50% Deckung)</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="dicht"> dicht mit anderen Pflanzen bewachsen (>50% Deckung)</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="klein"> Durchmesser der Baumscheibe &lt; 60 cm</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="klein"> Durchmesser der Baumscheibe < 60 cm</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="maeusegaenge"> Mäusegänge deutlich erkennbar</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="wurzeln"> freiliegende Wurzeln</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="weitere_Makel"> weitere Makel</label>
@@ -339,7 +327,7 @@
                     <label>Erfassung weiterer Schäden und Krankheiten</label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="schaeden" value="verbissen"> verbissen (abgeschabte Rinde)</label>
-                        <label><input type="checkbox" name="schaeden" value="verfeget"> verfeget (länglich abgeschabte Rinde)</label>
+                        <label><input type="checkbox" name="schaeden" value="verfeget"> verfegt (länglich abgeschabte Rinde)</label>
                         <label><input type="checkbox" name="schaeden" value="pfosten_schaden"> Rindenschaden an Pfosten/Verbissschutz</label>
                         <label><input type="checkbox" name="schaeden" value="rindennekrose"> Rindennekrose (tote Rinde)</label>
                         <label><input type="checkbox" name="schaeden" value="pilzbefall"> Pilzbefall</label>
@@ -375,8 +363,8 @@
 
             <div class="form-actions">
                 <button type="button" id="saveFinishBtn" class="btn btn-primary">✓ Speichern und abschließen</button>
-                <button type="button" id="saveNextTreeBtn" class="btn btn-primary">➡️ Speichern und nächster Baum</button>
-                <button type="button" id="saveNextRowBtn" class="btn btn-primary">⏩ Speichern und nächste Reihe</button>
+                <button type="button" id="saveNextTreeBtn" class="btn btn-primary">➡️ Speichern und nächsten Baum anlegen</button>
+                <button type="button" id="saveNextRowBtn" class="btn btn-primary">⏩ Speichern und nächste Reihe anlegen</button>
                 <button type="button" id="resetBtn" class="btn btn-secondary">↻ Formular zurücksetzen</button>
             </div>
         </form>

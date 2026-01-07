@@ -1,6 +1,7 @@
 // App State
 let trees = [];
 let photos = [];
+let editingTreeIndex = null;
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,28 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSavedCount();
     setupEventListeners();
     updateOnlineStatus();
-    setDefaultDate();
     
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 });
-
-// Datum und Uhrzeit standardmäßig auf jetzt setzen
-function setDefaultDate() {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const currentTime = now.toTimeString().substring(0, 5); // HH:MM Format
-    
-    const dateField = document.getElementById('erfassungsdatum');
-    const timeField = document.getElementById('erfassungsuhrzeit');
-    
-    if (dateField && !dateField.value) {
-        dateField.value = today;
-    }
-    if (timeField && !timeField.value) {
-        timeField.value = currentTime;
-    }
-}
 
 // Event Listeners
 function setupEventListeners() {
@@ -49,8 +32,15 @@ function setupEventListeners() {
     const backToWelcomeBtn = document.getElementById('backToWelcomeBtn');
     const umfangInput = document.getElementById('umfang');
     const durchmesserInput = document.getElementById('durchmesser');
+    const baumIdInput = document.getElementById('baumId');
 
     form.addEventListener('submit', (e) => e.preventDefault());
+    
+    // Aktualisiere Button-Labels wenn Baum-ID geändert wird
+    if (baumIdInput) {
+        baumIdInput.addEventListener('input', updateButtonLabels);
+        baumIdInput.addEventListener('change', updateButtonLabels);
+    }
     
     // Gegenseitiges Ausschluss-Verhalten für Umfang/Durchmesser
     umfangInput.addEventListener('input', () => {
@@ -84,7 +74,10 @@ function setupEventListeners() {
     fotoInput.addEventListener('change', handlePhotoUpload);
     closeBtn.addEventListener('click', () => modal.classList.remove('active'));
     clearAllBtn.addEventListener('click', clearAllData);
-    startNewRecordBtn.addEventListener('click', showFormScreen);
+    startNewRecordBtn.addEventListener('click', () => {
+        resetForm();
+        showFormScreen();
+    });
     backToWelcomeBtn.addEventListener('click', showWelcomeScreen);
     
     window.addEventListener('click', (e) => {
@@ -105,6 +98,8 @@ function showFormScreen() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('treeForm').style.display = 'block';
     document.getElementById('backToWelcomeBtn').style.display = 'inline-block';
+    // Button-Labels aktualisieren wenn Formular angezeigt wird
+    setTimeout(() => updateButtonLabels(), 50);
 }
 
 // Form Submit
@@ -144,12 +139,18 @@ function saveTree(action) {
     const formData = new FormData(form);
     const tree = {};
     
-    // Datum und Zeit
-    const erfassungsdatum = formData.get('erfassungsdatum');
-    const erfassungsuhrzeit = formData.get('erfassungsuhrzeit');
-    tree.CreationDate = erfassungsdatum || new Date().toISOString().split('T')[0];
-    tree.Erfassungsuhrzeit = erfassungsuhrzeit || new Date().toTimeString().substring(0, 5);
-    tree.Jahr = new Date(tree.CreationDate).getFullYear();
+    // Zeitstempel
+    const now = new Date().toISOString();
+    
+    if (editingTreeIndex !== null) {
+        // Bearbeiten: Altes Erstellungsdatum behalten, Update-Datum setzen
+        tree.createdAt = trees[editingTreeIndex].createdAt || now;
+        tree.updatedAt = now;
+    } else {
+        // Neu: Beides auf jetzt
+        tree.createdAt = now;
+        tree.updatedAt = now;
+    }
     
     // Standard-Felder
     tree.x = formData.get('longitude') || '0';
@@ -209,7 +210,11 @@ function saveTree(action) {
     }
     
     // Speichern
-    trees.push(tree);
+    if (editingTreeIndex !== null) {
+        trees[editingTreeIndex] = tree;
+    } else {
+        trees.push(tree);
+    }
     saveTreesToStorage();
     updateSavedCount();
     
@@ -232,8 +237,6 @@ function saveTree(action) {
     // Je nach Aktion unterschiedlich verhalten
     const currentName = formData.get('name');
     const currentBaumart = formData.get('baumart');
-    const currentDatum = formData.get('erfassungsdatum');
-    const currentUhrzeit = formData.get('erfassungsuhrzeit');
     
     // Gehölzschutz-Werte speichern
     const currentSchutz = Array.from(formData.getAll('schutz'));
@@ -252,71 +255,83 @@ function saveTree(action) {
         // Zurück zur Startseite
         showWelcomeScreen();
     } else if (action === 'nextTree') {
-        // Baum-ID hochzählen
+        // Baum-ID hochzählen und prüfen ob er existiert
         const nextId = incrementTreeId(baumId);
-        resetForm();
-        setDefaultDate();
-        document.getElementById('erfassungsdatum').value = currentDatum;
-        document.getElementById('erfassungsuhrzeit').value = currentUhrzeit;
-        document.getElementById('name').value = currentName;
-        document.getElementById('baumart').value = currentBaumart;
-        document.getElementById('baumId').value = nextId;
+        const nextTreeIndex = trees.findIndex(t => t['ID (z.B. "LRO-B-9")'] === nextId);
         
-        // Gehölzschutz wiederherstellen
-        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
-            cb.checked = currentSchutz.includes(cb.value);
-        });
-        document.getElementById('schutz_andere').value = currentSchutzAndere || '';
-        document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
-        document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
-        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
-            cb.checked = currentAnbindung.includes(cb.value);
-        });
-        
-        // Baumscheibe wiederherstellen
-        document.querySelectorAll('input[name="management"]').forEach(cb => {
-            cb.checked = currentManagement.includes(cb.value);
-        });
-        document.getElementById('management_andere').value = currentManagementAndere || '';
-        document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
-            cb.checked = currentBaumscheibeZustand.includes(cb.value);
-        });
-        document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
-        
-        photos = [];
+        if (nextTreeIndex !== -1) {
+            // Nächster Baum existiert bereits - laden zum Bearbeiten
+            editTree(nextTreeIndex);
+        } else {
+            // Nächster Baum existiert noch nicht - neuen anlegen
+            resetForm();
+            document.getElementById('name').value = currentName;
+            document.getElementById('baumart').value = currentBaumart;
+            document.getElementById('baumId').value = nextId;
+            
+            // Gehölzschutz wiederherstellen
+            document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+                cb.checked = currentSchutz.includes(cb.value);
+            });
+            document.getElementById('schutz_andere').value = currentSchutzAndere || '';
+            document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
+            document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
+            document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+                cb.checked = currentAnbindung.includes(cb.value);
+            });
+            
+            // Baumscheibe wiederherstellen
+            document.querySelectorAll('input[name="management"]').forEach(cb => {
+                cb.checked = currentManagement.includes(cb.value);
+            });
+            document.getElementById('management_andere').value = currentManagementAndere || '';
+            document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+                cb.checked = currentBaumscheibeZustand.includes(cb.value);
+            });
+            document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
+            
+            photos = [];
+            updateButtonLabels();
+        }
     } else if (action === 'nextRow') {
-        // Reihe hochzählen
+        // Reihe hochzählen und prüfen ob er existiert
         const nextId = incrementRowId(baumId);
-        resetForm();
-        setDefaultDate();
-        document.getElementById('erfassungsdatum').value = currentDatum;
-        document.getElementById('erfassungsuhrzeit').value = currentUhrzeit;
-        document.getElementById('name').value = currentName;
-        document.getElementById('baumart').value = currentBaumart;
-        document.getElementById('baumId').value = nextId;
+        const nextTreeIndex = trees.findIndex(t => t['ID (z.B. "LRO-B-9")'] === nextId);
         
-        // Gehölzschutz wiederherstellen
-        document.querySelectorAll('input[name="schutz"]').forEach(cb => {
-            cb.checked = currentSchutz.includes(cb.value);
-        });
-        document.getElementById('schutz_andere').value = currentSchutzAndere || '';
-        document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
-        document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
-        document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
-            cb.checked = currentAnbindung.includes(cb.value);
-        });
-        
-        // Baumscheibe wiederherstellen
-        document.querySelectorAll('input[name="management"]').forEach(cb => {
-            cb.checked = currentManagement.includes(cb.value);
-        });
-        document.getElementById('management_andere').value = currentManagementAndere || '';
-        document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
-            cb.checked = currentBaumscheibeZustand.includes(cb.value);
-        });
-        document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
-        
-        photos = [];
+        if (nextTreeIndex !== -1) {
+            // Baum in nächster Reihe existiert bereits - laden zum Bearbeiten
+            editTree(nextTreeIndex);
+        } else {
+            // Baum in nächster Reihe existiert noch nicht - neuen anlegen
+            resetForm();
+            document.getElementById('name').value = currentName;
+            document.getElementById('baumart').value = currentBaumart;
+            document.getElementById('baumId').value = nextId;
+            
+            // Gehölzschutz wiederherstellen
+            document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+                cb.checked = currentSchutz.includes(cb.value);
+            });
+            document.getElementById('schutz_andere').value = currentSchutzAndere || '';
+            document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
+            document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
+            document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+                cb.checked = currentAnbindung.includes(cb.value);
+            });
+            
+            // Baumscheibe wiederherstellen
+            document.querySelectorAll('input[name="management"]').forEach(cb => {
+                cb.checked = currentManagement.includes(cb.value);
+            });
+            document.getElementById('management_andere').value = currentManagementAndere || '';
+            document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+                cb.checked = currentBaumscheibeZustand.includes(cb.value);
+            });
+            document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
+            
+            photos = [];
+            updateButtonLabels();
+        }
     }
     
     // Scroll to top
@@ -326,7 +341,7 @@ function saveTree(action) {
 // ID-Hilfsfunktionen
 function incrementTreeId(baumId) {
     // z.B. "LRO-B-9" -> "LRO-B-10"
-    const match = baumId.match(/^([A-Z]+-[A-Z]+-)(\d+)(\.\d+)?$/);
+    const match = baumId.match(/^([A-ZÄÖÜ]+-[A-ZÄÖÜ]+-)(\d+)(\.\d+)?$/);
     if (match) {
         const prefix = match[1];
         const number = parseInt(match[2]) + 1;
@@ -338,7 +353,7 @@ function incrementTreeId(baumId) {
 
 function incrementRowId(baumId) {
     // z.B. "LRO-B-9" -> "LRO-C-1"
-    const match = baumId.match(/^([A-Z]+-)([A-Z]+)(-)(\d+)(\.\d+)?$/);
+    const match = baumId.match(/^([A-ZÄÖÜ]+-)([A-ZÄÖÜ]+)(-)(\d+)(\.\d+)?$/);
     if (match) {
         const prefix = match[1];
         const row = match[2];
@@ -352,6 +367,7 @@ function incrementRowId(baumId) {
 
 // Reset Form
 function resetForm() {
+    editingTreeIndex = null;
     document.getElementById('treeForm').reset();
     document.getElementById('locationDisplay').classList.remove('active');
     document.getElementById('photoPreview').innerHTML = '';
@@ -470,6 +486,16 @@ function updateSavedCount() {
     document.getElementById('savedCount').textContent = `${trees.length} Bäume gespeichert`;
 }
 
+// Helper for Date Formatting
+function formatDate(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
 // CSV Export
 function exportToCSV() {
     if (trees.length === 0) {
@@ -479,7 +505,7 @@ function exportToCSV() {
     
     // CSV Header
     const headers = [
-        'CreationDate', 'Erfassungsuhrzeit', 'x', 'y', 'Jahr',
+        'Erstellt am', 'Zuletzt bearbeitet', 'x', 'y',
         'ID (z.B. "LRO-B-9")',
         'Name(n) der durchführenden Person(en)',
         'Untersuchte Baumart',
@@ -517,16 +543,36 @@ function exportToCSV() {
     ];
     
     // CSV Rows
-    let csv = headers.join('\t') + '\n';
+    const separator = ';';
+    let csv = headers.join(separator) + '\n';
     
     trees.forEach(tree => {
         const row = headers.map(header => {
-            let value = tree[header] || '';
-            // Escape tabs and newlines
-            value = String(value).replace(/\t/g, ' ').replace(/\n/g, ' ');
+            let value = tree[header];
+            
+            // Spezielle Behandlung für Datum
+            if (header === 'Erstellt am') value = formatDate(tree.createdAt);
+            else if (header === 'Zuletzt bearbeitet') value = formatDate(tree.updatedAt);
+            else value = value || '';
+            
+            value = String(value);
+            
+            // Newlines entfernen
+            value = value.replace(/\n/g, ' ').replace(/\r/g, '');
+            
+            // Escape quotes
+            if (value.includes('"')) {
+                value = value.replace(/"/g, '""');
+            }
+            
+            // Wrap in quotes if contains separator or quotes
+            if (value.includes(separator) || value.includes('"')) {
+                value = `"${value}"`;
+            }
+            
             return value;
         });
-        csv += row.join('\t') + '\n';
+        csv += row.join(separator) + '\n';
     });
     
     // Download mit BOM für Excel-Kompatibilität
@@ -579,21 +625,33 @@ function showDataModal() {
                 <div class="data-group${isDuplicate ? ' duplicate-group' : ''}">
                     <h3 class="data-group-header">${id}${isDuplicate ? ` <span style="color:#f44336;font-size:0.9em;">(${entries.length}x erfasst)</span>` : ''}</h3>
                     <div class="data-group-items">
-                        ${entries.map(({ tree, index }) => `
+                        ${entries.map(({ tree, index }) => {
+                            const currentId = tree['ID (z.B. "LRO-B-9")'];
+                            const nextTreeId = incrementTreeId(currentId);
+                            const nextRowId = incrementRowId(currentId);
+                            const nextTreeExists = treeExists(nextTreeId);
+                            const nextRowExists = treeExists(nextRowId);
+                            
+                            const nextTreeLabel = nextTreeExists ? '✏️ Nächsten bearbeiten' : '➡️ Nächsten anlegen';
+                            const nextRowLabel = nextRowExists ? '✏️ Nächste Reihe bearbeiten' : '⏩ Nächste Reihe anlegen';
+                            
+                            return `
                             <div class="data-item${isDuplicate ? ' duplicate-item' : ''}">
                                 <p><strong>Baumart:</strong> ${tree['Untersuchte Baumart']}</p>
-                                <p><strong>Datum:</strong> ${tree.CreationDate}</p>
+                                <p><strong>Erfasst:</strong> ${formatDate(tree.createdAt)}</p>
+                                <p><strong>Bearbeitet:</strong> ${formatDate(tree.updatedAt)}</p>
                                 <p><strong>Höhe:</strong> ${tree['Höhe in XXX cm']} cm</p>
                                 <p><strong>Position:</strong> ${tree.y && tree.x && parseFloat(tree.y) !== 0 ? `${tree.y}, ${tree.x}` : 'Keine GPS-Daten'}</p>
                                 <p><strong>Person:</strong> ${tree['Name(n) der durchführenden Person(en)']}</p>
                                 <div class="data-item-actions">
                                     <button class="btn btn-primary" onclick="editTree(${index})">✏️ Bearbeiten</button>
-                                    <button class="btn btn-primary" onclick="nextTreeInRow(${index})">➡️ Nächster</button>
-                                    <button class="btn btn-primary" onclick="nextTreeInNextRow(${index})">⏩ Nächste Reihe</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInRow(${index})">${nextTreeLabel}</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInNextRow(${index})">${nextRowLabel}</button>
                                     <button class="btn btn-secondary" onclick="deleteTree(${index})">🗑️ Löschen</button>
                                 </div>
                             </div>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </div>
                 </div>
             `;
@@ -610,11 +668,50 @@ function showDataModal() {
 
 // Baum bearbeiten
 function editTree(index) {
+    editingTreeIndex = index;
     const tree = trees[index];
     loadTreeToForm(tree, true);
     document.getElementById('dataModal').classList.remove('active');
     showFormScreen();
+    updateButtonLabels();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Prüft ob eine Baum-ID bereits existiert
+function treeExists(baumId) {
+    return trees.some(tree => tree['ID (z.B. "LRO-B-9")'] === baumId);
+}
+
+// Aktualisiert Button-Texte basierend auf der aktuellen Baum-ID
+function updateButtonLabels() {
+    const baumIdInput = document.getElementById('baumId');
+    if (!baumIdInput || !baumIdInput.value) return;
+    
+    const currentId = baumIdInput.value;
+    const nextTreeId = incrementTreeId(currentId);
+    const nextRowId = incrementRowId(currentId);
+    
+    const nextTreeExists = treeExists(nextTreeId);
+    const nextRowExists = treeExists(nextRowId);
+    
+    const saveNextTreeBtn = document.getElementById('saveNextTreeBtn');
+    const saveNextRowBtn = document.getElementById('saveNextRowBtn');
+    
+    if (saveNextTreeBtn) {
+        if (nextTreeExists) {
+            saveNextTreeBtn.innerHTML = '✏️ Speichern und nächsten Baum bearbeiten';
+        } else {
+            saveNextTreeBtn.innerHTML = '➡️ Speichern und nächsten Baum anlegen';
+        }
+    }
+    
+    if (saveNextRowBtn) {
+        if (nextRowExists) {
+            saveNextRowBtn.innerHTML = '✏️ Speichern und nächste Reihe bearbeiten';
+        } else {
+            saveNextRowBtn.innerHTML = '⏩ Speichern und nächste Reihe anlegen';
+        }
+    }
 }
 
 // Nächster Baum in Reihe
@@ -622,11 +719,22 @@ function nextTreeInRow(index) {
     const tree = trees[index];
     const baumId = tree['ID (z.B. "LRO-B-9")'];
     const nextId = incrementTreeId(baumId);
-    loadTreeToForm(tree, false);
-    document.getElementById('baumId').value = nextId;
-    document.getElementById('dataModal').classList.remove('active');
-    showFormScreen();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Prüfe ob der nächste Baum existiert
+    const nextTreeIndex = trees.findIndex(t => t['ID (z.B. "LRO-B-9")'] === nextId);
+    
+    if (nextTreeIndex !== -1) {
+        // Baum existiert bereits - laden zum Bearbeiten
+        editTree(nextTreeIndex);
+    } else {
+        // Baum existiert noch nicht - neuen anlegen
+        loadTreeToForm(tree, false);
+        document.getElementById('baumId').value = nextId;
+        document.getElementById('dataModal').classList.remove('active');
+        showFormScreen();
+        updateButtonLabels();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 // Nächster Baum in nächster Reihe
@@ -634,11 +742,22 @@ function nextTreeInNextRow(index) {
     const tree = trees[index];
     const baumId = tree['ID (z.B. "LRO-B-9")'];
     const nextId = incrementRowId(baumId);
-    loadTreeToForm(tree, false);
-    document.getElementById('baumId').value = nextId;
-    document.getElementById('dataModal').classList.remove('active');
-    showFormScreen();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Prüfe ob der Baum in der nächsten Reihe existiert
+    const nextTreeIndex = trees.findIndex(t => t['ID (z.B. "LRO-B-9")'] === nextId);
+    
+    if (nextTreeIndex !== -1) {
+        // Baum existiert bereits - laden zum Bearbeiten
+        editTree(nextTreeIndex);
+    } else {
+        // Baum existiert noch nicht - neuen anlegen
+        loadTreeToForm(tree, false);
+        document.getElementById('baumId').value = nextId;
+        document.getElementById('dataModal').classList.remove('active');
+        showFormScreen();
+        updateButtonLabels();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 // Baumdaten ins Formular laden
@@ -1016,9 +1135,9 @@ function showHelp(topic) {
             <img src="images/neigung.png" alt="Neigungswinkel">
             <p><strong>Kategorien:</strong></p>
             <ul>
-                <li><strong>Sehr gerade:</strong> &lt; 10° Neigung</li>
-                <li><strong>Leicht geneigt:</strong> &gt; 10° Neigung</li>
-                <li><strong>Sehr geneigt:</strong> &gt; 30° Neigung</li>
+                <li><strong>Sehr gerade:</strong> < 10° Neigung</li>
+                <li><strong>Leicht geneigt:</strong> > 10° Neigung</li>
+                <li><strong>Sehr geneigt:</strong> > 30° Neigung</li>
             </ul>
         `,
         
