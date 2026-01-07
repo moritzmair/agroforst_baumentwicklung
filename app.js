@@ -25,14 +25,13 @@ function setupEventListeners() {
     const resetBtn = document.getElementById('resetBtn');
     const getLocationBtn = document.getElementById('getLocationBtn');
     const fotoInput = document.getElementById('foto');
-    const modal = document.getElementById('dataModal');
-    const closeBtn = document.querySelector('#dataModal .close');
     const clearAllBtn = document.getElementById('clearAllBtn');
     const saveFinishBtn = document.getElementById('saveFinishBtn');
     const saveNextTreeBtn = document.getElementById('saveNextTreeBtn');
     const saveNextRowBtn = document.getElementById('saveNextRowBtn');
     const startNewRecordBtn = document.getElementById('startNewRecordBtn');
     const backToWelcomeBtn = document.getElementById('backToWelcomeBtn');
+    const backFromDataBtn = document.getElementById('backFromDataBtn');
     const umfangInput = document.getElementById('umfang');
     const durchmesserInput = document.getElementById('durchmesser');
     const baumIdInput = document.getElementById('baumId');
@@ -71,43 +70,115 @@ function setupEventListeners() {
     exportBtn.addEventListener('click', exportToCSV);
     importBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', handleCSVImport);
-    viewDataBtn.addEventListener('click', () => {
-        showDataModal();
-    });
-    savedCount.addEventListener('click', () => {
-        showDataModal();
-    });
+    viewDataBtn.addEventListener('click', showDataScreen);
+    savedCount.addEventListener('click', showDataScreen);
     resetBtn.addEventListener('click', resetForm);
     getLocationBtn.addEventListener('click', getGPSLocation);
     fotoInput.addEventListener('change', handlePhotoUpload);
-    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
     clearAllBtn.addEventListener('click', clearAllData);
     startNewRecordBtn.addEventListener('click', () => {
         resetForm();
         showFormScreen();
     });
     backToWelcomeBtn.addEventListener('click', showWelcomeScreen);
-    
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
-    });
+    backFromDataBtn.addEventListener('click', showWelcomeScreen);
 }
 
 // Screen Navigation
 function showWelcomeScreen() {
     document.getElementById('welcomeScreen').style.display = 'block';
     document.getElementById('treeForm').style.display = 'none';
+    document.getElementById('dataScreen').style.display = 'none';
     document.getElementById('backToWelcomeBtn').style.display = 'none';
+    document.getElementById('backFromDataBtn').style.display = 'none';
 }
 
 function showFormScreen() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('treeForm').style.display = 'block';
+    document.getElementById('dataScreen').style.display = 'none';
     document.getElementById('backToWelcomeBtn').style.display = 'inline-block';
+    document.getElementById('backFromDataBtn').style.display = 'none';
     // Button-Labels aktualisieren wenn Formular angezeigt wird
     setTimeout(() => updateButtonLabels(), 50);
+}
+
+function showDataScreen() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('treeForm').style.display = 'none';
+    document.getElementById('dataScreen').style.display = 'block';
+    document.getElementById('backToWelcomeBtn').style.display = 'none';
+    document.getElementById('backFromDataBtn').style.display = 'inline-block';
+    
+    const dataList = document.getElementById('dataList');
+    
+    if (trees.length === 0) {
+        dataList.innerHTML = '<p style="text-align:center;color:#757575;">Noch keine Bäume gespeichert.</p>';
+        document.getElementById('treeMap').style.display = 'none';
+    } else {
+        document.getElementById('treeMap').style.display = 'block';
+        
+        // Gruppiere Bäume nach ID
+        const grouped = {};
+        trees.forEach((tree, index) => {
+            const id = tree['ID (z.B. "LRO-B-9")'];
+            if (!grouped[id]) {
+                grouped[id] = [];
+            }
+            grouped[id].push({ tree, index });
+        });
+        
+        // Sortiere IDs
+        const sortedIds = Object.keys(grouped).sort();
+        
+        // HTML generieren
+        dataList.innerHTML = sortedIds.map(id => {
+            const entries = grouped[id];
+            const isDuplicate = entries.length > 1;
+            
+            return `
+                <div class="data-group${isDuplicate ? ' duplicate-group' : ''}">
+                    <h3 class="data-group-header">${id}${isDuplicate ? ` <span style="color:#f44336;font-size:0.9em;">(${entries.length}x erfasst)</span>` : ''}</h3>
+                    <div class="data-group-items">
+                        ${entries.map(({ tree, index }) => {
+                            const currentId = tree['ID (z.B. "LRO-B-9")'];
+                            const nextTreeId = incrementTreeId(currentId);
+                            const nextRowId = incrementRowId(currentId);
+                            const nextTreeExists = treeExists(nextTreeId);
+                            const nextRowExists = treeExists(nextRowId);
+                            
+                            const nextTreeLabel = nextTreeExists ? '✏️ Nächsten bearbeiten' : '➡️ Nächsten anlegen';
+                            const nextRowLabel = nextRowExists ? '✏️ Nächste Reihe bearbeiten' : '⏩ Nächste Reihe anlegen';
+                            
+                            return `
+                            <div class="data-item${isDuplicate ? ' duplicate-item' : ''}">
+                                <p><strong>Baumart:</strong> ${tree['Untersuchte Baumart']}</p>
+                                <p><strong>Erfasst:</strong> ${formatDate(tree.createdAt)}</p>
+                                <p><strong>Bearbeitet:</strong> ${formatDate(tree.updatedAt)}</p>
+                                <p><strong>Höhe:</strong> ${tree['Höhe in XXX cm']} cm</p>
+                                <p><strong>Position:</strong> ${tree.y && tree.x && parseFloat(tree.y) !== 0 ? `${tree.y}, ${tree.x}` : 'Keine GPS-Daten'}</p>
+                                <p><strong>Person:</strong> ${tree['Name(n) der durchführenden Person(en)']}</p>
+                                <div class="data-item-actions">
+                                    <button class="btn btn-primary" onclick="editTree(${index})">✏️ Bearbeiten</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInRow(${index})">${nextTreeLabel}</button>
+                                    <button class="btn btn-primary" onclick="nextTreeInNextRow(${index})">${nextRowLabel}</button>
+                                    <button class="btn btn-secondary" onclick="deleteTree(${index})">🗑️ Löschen</button>
+                                </div>
+                            </div>
+                        `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Canvas nach Screen-Wechsel neu zeichnen für korrekte Größe
+    if (trees.length > 0) {
+        setTimeout(() => drawTreeMap(), 100);
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Form Submit
@@ -638,7 +709,7 @@ function handleCSVImport(e) {
             // Speichern und UI aktualisieren
             saveTreesToStorage();
             updateSavedCount();
-            showDataModal();
+            showDataScreen();
             
             // Ergebnisbericht
             let report = `✓ Import abgeschlossen!\n\n`;
@@ -958,7 +1029,6 @@ function editTree(index) {
     editingTreeIndex = index;
     const tree = trees[index];
     loadTreeToForm(tree, true);
-    document.getElementById('dataModal').classList.remove('active');
     showFormScreen();
     updateButtonLabels();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1017,7 +1087,6 @@ function nextTreeInRow(index) {
         // Baum existiert noch nicht - neuen anlegen
         loadTreeToForm(tree, false);
         document.getElementById('baumId').value = nextId;
-        document.getElementById('dataModal').classList.remove('active');
         showFormScreen();
         updateButtonLabels();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1040,7 +1109,6 @@ function nextTreeInNextRow(index) {
         // Baum existiert noch nicht - neuen anlegen
         loadTreeToForm(tree, false);
         document.getElementById('baumId').value = nextId;
-        document.getElementById('dataModal').classList.remove('active');
         showFormScreen();
         updateButtonLabels();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1318,7 +1386,7 @@ function deleteTree(index) {
         trees.splice(index, 1);
         saveTreesToStorage();
         updateSavedCount();
-        showDataModal();
+        showDataScreen();
     }
 }
 
@@ -1328,7 +1396,7 @@ function clearAllData() {
             trees = [];
             saveTreesToStorage();
             updateSavedCount();
-            document.getElementById('dataModal').classList.remove('active');
+            showWelcomeScreen();
             alert('Alle Daten wurden gelöscht.');
         }
     }

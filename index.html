@@ -75,6 +75,7 @@
         <div class="action-buttons">
             <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
             <button id="backToWelcomeBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
+            <button id="backFromDataBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
         </div>
 
         <form id="treeForm" style="display:none;">
@@ -376,26 +377,23 @@
             </div>
         </div>
 
-        <!-- Data Modal -->
-        <div id="dataModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Gespeicherte Baumdaten</h2>
-                
-                <div class="data-actions" style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
-                    <button id="importBtn" class="btn btn-secondary">📥 CSV Import</button>
-                    <input type="file" id="importFileInput" accept=".csv" style="display:none;">
-                </div>
-                
-                <div id="treeMap" class="tree-map-container">
-                    <h3>Positionskarte</h3>
-                    <canvas id="treeMapCanvas"></canvas>
-                    <div id="mapLegend" class="map-legend"></div>
-                </div>
-                <div id="dataList"></div>
-                <button id="clearAllBtn" class="btn btn-danger">Alle Daten löschen</button>
+        <!-- Data Screen -->
+        <div id="dataScreen" class="data-screen" style="display:none;">
+            <h2>Gespeicherte Baumdaten</h2>
+            
+            <div class="data-actions">
+                <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
+                <button id="importBtn" class="btn btn-secondary">📥 CSV Import</button>
+                <input type="file" id="importFileInput" accept=".csv" style="display:none;">
             </div>
+            
+            <div id="treeMap" class="tree-map-container">
+                <h3>Positionskarte</h3>
+                <canvas id="treeMapCanvas"></canvas>
+                <div id="mapLegend" class="map-legend"></div>
+            </div>
+            <div id="dataList"></div>
+            <button id="clearAllBtn" class="btn btn-danger">Alle Daten löschen</button>
         </div>
     </div>
 
