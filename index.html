@@ -73,7 +73,6 @@
         </div>
 
         <div class="action-buttons">
-            <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
             <button id="viewDataBtn" class="btn btn-secondary">📊 Daten ansehen</button>
             <button id="backToWelcomeBtn" class="btn btn-secondary" style="display:none;">← Zurück zur Startseite</button>
         </div>
@@ -382,6 +381,13 @@
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <h2>Gespeicherte Baumdaten</h2>
+                
+                <div class="data-actions" style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>
+                    <button id="importBtn" class="btn btn-secondary">📥 CSV Import</button>
+                    <input type="file" id="importFileInput" accept=".csv" style="display:none;">
+                </div>
+                
                 <div id="treeMap" class="tree-map-container">
                     <h3>Positionskarte</h3>
                     <canvas id="treeMapCanvas"></canvas>

@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     const form = document.getElementById('treeForm');
     const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFileInput = document.getElementById('importFileInput');
     const viewDataBtn = document.getElementById('viewDataBtn');
+    const savedCount = document.getElementById('savedCount');
     const resetBtn = document.getElementById('resetBtn');
     const getLocationBtn = document.getElementById('getLocationBtn');
     const fotoInput = document.getElementById('foto');
@@ -66,7 +69,12 @@ function setupEventListeners() {
     saveNextTreeBtn.addEventListener('click', () => saveTree('nextTree'));
     saveNextRowBtn.addEventListener('click', () => saveTree('nextRow'));
     exportBtn.addEventListener('click', exportToCSV);
+    importBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', handleCSVImport);
     viewDataBtn.addEventListener('click', () => {
+        showDataModal();
+    });
+    savedCount.addEventListener('click', () => {
         showDataModal();
     });
     resetBtn.addEventListener('click', resetForm);
@@ -580,16 +588,295 @@ function exportToCSV() {
     const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    const date = new Date().toISOString().split('T')[0];
+    
+    // Zeitstempel mit Datum und Uhrzeit: 2026-01-07_08-07-01
+    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '').replace('T', '_');
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `Baumentwicklung_${date}.csv`);
+    link.setAttribute('download', `Baumentwicklung_${timestamp}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     alert(`✓ CSV-Export erfolgreich (${trees.length} Bäume)`);
+}
+
+// CSV Import
+function handleCSVImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const csvContent = event.target.result;
+            const importedTrees = parseCSV(csvContent);
+            
+            if (importedTrees.length === 0) {
+                alert('⚠️ Keine gültigen Bäume in der CSV-Datei gefunden.');
+                return;
+            }
+            
+            // Zeige Bestätigungsdialog mit Erklärung
+            const message = `📥 CSV-Import\n\n` +
+                `Gefundene Bäume: ${importedTrees.length}\n\n` +
+                `Verhalten bei Duplikaten:\n` +
+                `• Bäume mit gleicher ID werden zusammengeführt\n` +
+                `• Leere Felder werden mit importierten Daten ergänzt\n` +
+                `• Bei unterschiedlichen befüllten Feldern wird ein Duplikat angelegt\n` +
+                `  (zur manuellen Prüfung - keine Datenverluste)\n\n` +
+                `Import fortsetzen?`;
+            
+            if (!confirm(message)) {
+                e.target.value = ''; // Reset file input
+                return;
+            }
+            
+            const result = mergeImportedTrees(importedTrees);
+            
+            // Speichern und UI aktualisieren
+            saveTreesToStorage();
+            updateSavedCount();
+            showDataModal();
+            
+            // Ergebnisbericht
+            let report = `✓ Import abgeschlossen!\n\n`;
+            report += `Neue Bäume: ${result.added}\n`;
+            report += `Zusammengeführt (ohne Konflikte): ${result.merged}\n`;
+            report += `Als Duplikat angelegt (Konflikte): ${result.duplicates}\n`;
+            
+            if (result.conflictDetails.length > 0) {
+                report += `\n⚠️ Duplikate wegen Konflikten (bitte manuell prüfen):\n`;
+                result.conflictDetails.forEach(detail => {
+                    report += `• ${detail}\n`;
+                });
+            }
+            
+            alert(report);
+            
+        } catch (error) {
+            alert(`❌ Fehler beim Import: ${error.message}`);
+        }
+        
+        // Reset file input
+        e.target.value = '';
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+}
+
+// CSV Parser
+function parseCSV(csvContent) {
+    // BOM entfernen falls vorhanden
+    if (csvContent.charCodeAt(0) === 0xFEFF) {
+        csvContent = csvContent.slice(1);
+    }
+    
+    const lines = csvContent.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) {
+        console.error('CSV hat weniger als 2 Zeilen');
+        return [];
+    }
+    
+    // Parse header
+    const headerLine = lines[0];
+    const headers = parseCSVLine(headerLine).map(h => h.trim());
+    
+    console.log('CSV Headers:', headers);
+    console.log('Anzahl Header:', headers.length);
+    
+    // Finde den Index der Baum-ID Spalte
+    const idHeaderIndex = headers.findIndex(h =>
+        h.includes('ID') && (h.includes('LRO') || h.includes('z.B'))
+    );
+    
+    if (idHeaderIndex === -1) {
+        console.error('Baum-ID Header nicht gefunden. Verfügbare Header:', headers);
+        alert('❌ Fehler: Baum-ID Spalte in CSV nicht gefunden. Bitte überprüfen Sie das Dateiformat.');
+        return [];
+    }
+    
+    const idHeader = headers[idHeaderIndex];
+    console.log('Baum-ID Header gefunden:', idHeader, 'Index:', idHeaderIndex);
+    
+    // Parse rows
+    const trees = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === 0 || values.every(v => !v.trim())) continue;
+        
+        const tree = {};
+        headers.forEach((header, index) => {
+            let value = (values[index] || '').trim();
+            
+            // Spezielle Behandlung für Datums-Felder
+            if (header === 'Erstellt am' || header === 'Zuletzt bearbeitet') {
+                // Datum im Format "DD.MM.YYYY, HH:MM" zu ISO konvertieren
+                if (value) {
+                    const parsed = parseDateString(value);
+                    if (header === 'Erstellt am') {
+                        tree.createdAt = parsed;
+                    } else {
+                        tree.updatedAt = parsed;
+                    }
+                }
+            } else {
+                tree[header] = value;
+            }
+        });
+        
+        // Verwende den gefundenen ID-Header
+        const baumId = tree[idHeader];
+        console.log(`Zeile ${i}: Baum-ID = "${baumId}"`);
+        
+        // Nur hinzufügen wenn Baum-ID vorhanden
+        if (baumId && baumId.trim()) {
+            // Stelle sicher dass die ID unter dem Standard-Key gespeichert ist
+            tree['ID (z.B. "LRO-B-9")'] = baumId;
+            trees.push(tree);
+        }
+    }
+    
+    console.log('Geparste Bäume:', trees.length);
+    return trees;
+}
+
+// Parse single CSV line (handles quoted fields with delimiters)
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    const separator = ';';
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                // Escaped quote
+                current += '"';
+                i++; // Skip next quote
+            } else {
+                // Toggle quote mode
+                inQuotes = !inQuotes;
+            }
+        } else if (char === separator && !inQuotes) {
+            // End of field
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    // Add last field
+    result.push(current);
+    
+    return result;
+}
+
+// Parse date string to ISO format
+function parseDateString(dateStr) {
+    if (!dateStr) return new Date().toISOString();
+    
+    // Format: "DD.MM.YYYY, HH:MM" -> ISO
+    const match = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4}),?\s*(\d{2}):(\d{2})/);
+    if (match) {
+        const [, day, month, year, hour, minute] = match;
+        return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`).toISOString();
+    }
+    
+    // Fallback: versuche direktes Parsen
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+}
+
+// Merge imported trees with existing trees
+function mergeImportedTrees(importedTrees) {
+    const result = {
+        added: 0,
+        merged: 0,
+        duplicates: 0,
+        conflictDetails: []
+    };
+    
+    importedTrees.forEach(importedTree => {
+        const baumId = importedTree['ID (z.B. "LRO-B-9")'];
+        const existingIndex = trees.findIndex(t => t['ID (z.B. "LRO-B-9")'] === baumId);
+        
+        if (existingIndex === -1) {
+            // Neuer Baum
+            trees.push(importedTree);
+            result.added++;
+        } else {
+            // Baum existiert bereits - prüfen ob zusammenführbar
+            const mergeResult = checkAndMergeTrees(trees[existingIndex], importedTree, baumId);
+            
+            if (mergeResult.hasConflicts) {
+                // Konflikte gefunden - als Duplikat anlegen
+                trees.push(importedTree);
+                result.duplicates++;
+                result.conflictDetails.push(`${baumId}: ${mergeResult.conflicts.join(', ')}`);
+            } else if (mergeResult.hasChanges) {
+                // Keine Konflikte - zusammenführen
+                trees[existingIndex] = mergeResult.tree;
+                result.merged++;
+            }
+            // Wenn weder hasConflicts noch hasChanges: identische Daten, nichts tun
+        }
+    });
+    
+    return result;
+}
+
+// Check and merge two tree records
+function checkAndMergeTrees(existing, imported, baumId) {
+    const merged = { ...existing };
+    let hasChanges = false;
+    let hasConflicts = false;
+    const conflicts = [];
+    
+    // Alle Felder durchgehen
+    Object.keys(imported).forEach(key => {
+        // Timestamps separat behandeln
+        if (key === 'createdAt' || key === 'updatedAt') {
+            return;
+        }
+        
+        const existingValue = existing[key];
+        const importedValue = imported[key];
+        
+        const existingEmpty = !existingValue || existingValue.trim() === '';
+        const importedEmpty = !importedValue || importedValue.trim() === '';
+        
+        // Fall 1: Import-Wert ist leer -> nichts tun
+        if (importedEmpty) {
+            return;
+        }
+        
+        // Fall 2: Existierender Wert ist leer -> ergänzen
+        if (existingEmpty) {
+            merged[key] = importedValue;
+            hasChanges = true;
+            return;
+        }
+        
+        // Fall 3: Beide befüllt
+        if (existingValue.trim() !== importedValue.trim()) {
+            // Konflikt: unterschiedliche befüllte Felder
+            hasConflicts = true;
+            conflicts.push(key);
+        }
+    });
+    
+    // Update-Zeitstempel setzen wenn es Änderungen gab
+    if (hasChanges && !hasConflicts) {
+        merged.updatedAt = new Date().toISOString();
+    }
+    
+    return { tree: merged, hasChanges, hasConflicts, conflicts };
 }
 
 // Data Modal
