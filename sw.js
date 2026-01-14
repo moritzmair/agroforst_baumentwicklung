@@ -1,4 +1,4 @@
-const CACHE_NAME = 'baumentwicklung-v3';
+const CACHE_NAME = 'baumentwicklung-v4';
 const urlsToCache = [
     './',
     './index.html',

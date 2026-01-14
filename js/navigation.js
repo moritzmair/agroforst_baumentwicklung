@@ -22,6 +22,8 @@ export function showFormScreen() {
     document.getElementById('viewDataBtn').style.display = 'inline-block';
     // Button-Labels aktualisieren wenn Formular angezeigt wird
     setTimeout(() => updateButtonLabels(), 50);
+    // Nach oben scrollen damit alle Felder sichtbar sind
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 export function showDataScreen() {

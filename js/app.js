@@ -1,6 +1,6 @@
 // Main App Entry Point
 import { loadTreesFromStorage, updateSavedCount } from './storage.js';
-import { updateOnlineStatus } from './helpers.js';
+import { updateOnlineStatus, handleBaumIdInput } from './helpers.js';
 import { showWelcomeScreen, showFormScreen, showDataScreen, updateButtonLabels } from './navigation.js';
 import { saveTree, resetForm, clearAllData } from './form.js';
 import { getGPSLocation } from './gps.js';
@@ -41,10 +41,13 @@ function setupEventListeners() {
 
     form.addEventListener('submit', (e) => e.preventDefault());
     
-    // Aktualisiere Button-Labels wenn Baum-ID geändert wird
+    // Live-Formatierung und Button-Labels für Baum-ID
     if (baumIdInput) {
-        baumIdInput.addEventListener('input', updateButtonLabels);
-        baumIdInput.addEventListener('change', updateButtonLabels);
+        baumIdInput.addEventListener('input', (e) => {
+            handleBaumIdInput(e);
+            updateButtonLabels();
+        });
+        baumIdInput.addEventListener('blur', handleBaumIdInput);
     }
     
     // Gegenseitiges Ausschluss-Verhalten für Umfang/Durchmesser

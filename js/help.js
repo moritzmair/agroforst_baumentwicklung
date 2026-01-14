@@ -9,14 +9,14 @@ export function showHelp(topic) {
             <p>Die Baum-ID ist super wichtig und ist so aufgebaut: <strong>Lokalgruppe-Baumreihe-Baum</strong></p>
             <p><strong>Beispiele:</strong></p>
             <ul>
-                <li>LRO-B-9 (Lokalgruppe LRO, Reihe B, Baum 9)</li>
-                <li>DA-C-2 (Lokalgruppe DA, Reihe C, Baum 2)</li>
+                <li>LRO-B-09 (Lokalgruppe LRO, Reihe B, Baum 9)</li>
+                <li>DA-C-02 (Lokalgruppe DA, Reihe C, Baum 2)</li>
             </ul>
             <p><strong>Bei mehrstämmigen Bäumen:</strong></p>
             <p>Füllt mehrere Formulare aus und benennt:</p>
             <ul>
-                <li>Den dicksten Stämmling: LRO-B-9.1</li>
-                <li>Den zweitdicksten: LRO-B-9.2</li>
+                <li>Den dicksten Stämmling: LRO-B-09.1</li>
+                <li>Den zweitdicksten: LRO-B-09.2</li>
                 <li>usw.</li>
             </ul>
         `,

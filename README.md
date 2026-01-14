@@ -40,9 +40,16 @@ Progressive Web App für das Agroforst-Monitoring zur Erfassung von Baumentwickl
 1. Webseite im Chrome Browser öffnen
 2. Menü → "Zum Startbildschirm hinzufügen"
 
-**iOS:**
+**iOS (Safari):**
 1. Webseite im Safari Browser öffnen
-2. Teilen-Button → "Zum Home-Bildschirm"
+2. Teilen-Button tippen
+3. Auf "mehr" tippen (oben im Teilen-Menü) um nach unten scrollen zu können
+4. "Zum Home-Bildschirm" auswählen
+
+**iOS (Chrome):**
+1. Webseite im Chrome Browser öffnen
+2. Teilen-Button tippen
+3. "Zum Startbildschirm hinzufügen" auswählen
 
 ## Verwendung
 
@@ -56,8 +63,8 @@ Progressive Web App für das Agroforst-Monitoring zur Erfassung von Baumentwickl
 
 ### Baum-ID Format
 Format: `LOKALGRUPPE-REIHE-NUMMER`
-- Beispiel: `LRO-B-9`
-- Mehrstämmig: `LRO-B-9.1`, `LRO-B-9.2` etc.
+- Beispiel: `LRO-B-09`
+- Mehrstämmig: `LRO-B-09.1`, `LRO-B-09.2` etc.
 
 ### Datenfelder
 - **Pflichtfelder** sind mit * markiert
