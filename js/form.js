@@ -137,16 +137,13 @@ export function saveTree(action) {
     
     // Gehölzschutz-Werte speichern
     const currentSchutz = Array.from(formData.getAll('schutz'));
-    const currentSchutzAndere = formData.get('schutz_andere');
     const currentSchutzZustand = formData.get('schutz_zustand');
     const currentStammGeweisselt = formData.get('stamm_geweisselt');
     const currentAnbindung = Array.from(formData.getAll('anbindung'));
     
     // Baumscheibe-Werte speichern
     const currentManagement = Array.from(formData.getAll('management'));
-    const currentManagementAndere = formData.get('management_andere');
     const currentBaumscheibeZustand = Array.from(formData.getAll('baumscheibe_zustand'));
-    const currentBaumscheibeMakel = formData.get('baumscheibe_makel');
     
     if (action === 'finish') {
         // Zurück zur Startseite
@@ -170,7 +167,6 @@ export function saveTree(action) {
             document.querySelectorAll('input[name="schutz"]').forEach(cb => {
                 cb.checked = currentSchutz.includes(cb.value);
             });
-            document.getElementById('schutz_andere').value = currentSchutzAndere || '';
             document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
             document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
             document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
@@ -181,11 +177,9 @@ export function saveTree(action) {
             document.querySelectorAll('input[name="management"]').forEach(cb => {
                 cb.checked = currentManagement.includes(cb.value);
             });
-            document.getElementById('management_andere').value = currentManagementAndere || '';
             document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
                 cb.checked = currentBaumscheibeZustand.includes(cb.value);
             });
-            document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
             
             updateButtonLabels();
         }
@@ -208,7 +202,6 @@ export function saveTree(action) {
             document.querySelectorAll('input[name="schutz"]').forEach(cb => {
                 cb.checked = currentSchutz.includes(cb.value);
             });
-            document.getElementById('schutz_andere').value = currentSchutzAndere || '';
             document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
             document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
             document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
@@ -219,11 +212,9 @@ export function saveTree(action) {
             document.querySelectorAll('input[name="management"]').forEach(cb => {
                 cb.checked = currentManagement.includes(cb.value);
             });
-            document.getElementById('management_andere').value = currentManagementAndere || '';
             document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
                 cb.checked = currentBaumscheibeZustand.includes(cb.value);
             });
-            document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
             
             updateButtonLabels();
         }
@@ -323,6 +314,7 @@ function loadTreeToForm(tree, loadMeasurements = true) {
         document.getElementById('umfang').value = '';
         document.getElementById('durchmesser').value = '';
         document.getElementById('trieblaenge').value = '';
+        document.getElementById('neigung').value = '';
         document.getElementById('astungshoehe').value = '';
         document.getElementById('erster_ast').value = '';
         document.getElementById('schnittwunden').value = '0';
@@ -344,7 +336,6 @@ function loadTreeToForm(tree, loadMeasurements = true) {
             cb.checked = schutzTypes.includes(cb.value);
         });
     }
-    document.getElementById('schutz_andere').value = tree['andere - Art des Gehölzschutzes'] || '';
     document.getElementById('schutz_zustand').value = tree['Zustand des Gehölzschutzes'] || '';
     document.getElementById('stamm_geweisselt').value = tree['Ist der Stamm geweißelt?'] || '';
     
@@ -363,7 +354,6 @@ function loadTreeToForm(tree, loadMeasurements = true) {
             cb.checked = management.includes(cb.value);
         });
     }
-    document.getElementById('management_andere').value = tree['andere - Art des Managements'] || '';
     
     // Baumscheibe
     if (tree['Zustand der Baumscheibe']) {
@@ -372,27 +362,48 @@ function loadTreeToForm(tree, loadMeasurements = true) {
             cb.checked = baumscheibeZustand.includes(cb.value);
         });
     }
-    document.getElementById('baumscheibe_makel').value = tree['weitere Makel - Zustand der Baumscheibe'] || '';
     
-    // Schäden
-    if (tree['Erfassung weiterer Schäden und Krankheiten']) {
-        const schaeden = tree['Erfassung weiterer Schäden und Krankheiten'].split(',').filter(v => v);
-        document.querySelectorAll('input[name="schaeden"]').forEach(cb => {
-            cb.checked = schaeden.includes(cb.value);
-        });
+    // Textfelder nur beim Bearbeiten (loadMeasurements = true) laden
+    if (loadMeasurements) {
+        document.getElementById('schutz_andere').value = tree['andere - Art des Gehölzschutzes'] || '';
+        document.getElementById('management_andere').value = tree['andere - Art des Managements'] || '';
+        document.getElementById('baumscheibe_makel').value = tree['weitere Makel - Zustand der Baumscheibe'] || '';
+        
+        // Schäden
+        if (tree['Erfassung weiterer Schäden und Krankheiten']) {
+            const schaeden = tree['Erfassung weiterer Schäden und Krankheiten'].split(',').filter(v => v);
+            document.querySelectorAll('input[name="schaeden"]').forEach(cb => {
+                cb.checked = schaeden.includes(cb.value);
+            });
+        }
+        document.getElementById('schaeden_weitere').value = tree['weitere - Erfassung weiterer Schäden und Krankheiten'] || '';
+        document.getElementById('schaeden_beschreibung').value = tree['Beschreibung der Schäden und Krankheiten'] || '';
+        
+        // Ergänzungen
+        document.getElementById('ergaenzungen_s2').value = tree['Ergänzungen/Problembeschreibungen (S. 2)'] || '';
+        document.getElementById('ergaenzungen_s3').value = tree['Ergänzungen/Problembeschreibungen (S. 3)'] || '';
+        document.getElementById('ergaenzungen_s4').value = tree['Ergänzungen/Problembeschreibungen (S. 4)'] || '';
+        document.getElementById('ergaenzungen_s5').value = tree['Ergänzungen/Problembeschreibungen (S.5)'] || '';
+        document.getElementById('ergaenzungen_s6').value = tree['Ergänzungen/Problembeschreibungen (S. 6)'] || '';
+        document.getElementById('ergaenzungen_s7').value = tree['Ergänzungen/Problembeschreibungen (S. 7)'] || '';
+        document.getElementById('ergaenzungen_s8').value = tree['Ergänzungen/Problembeschreibungen (S.8)'] || '';
+        document.getElementById('ergaenzungen_s9').value = tree['Ergänzungen/Problembeschreibungen (S.9)'] || tree['Auffälligkeiten im Freifeld notieren'] || '';
+    } else {
+        // Beim nächsten Baum: Textfelder leer lassen
+        document.getElementById('schutz_andere').value = '';
+        document.getElementById('management_andere').value = '';
+        document.getElementById('baumscheibe_makel').value = '';
+        document.getElementById('schaeden_weitere').value = '';
+        document.getElementById('schaeden_beschreibung').value = '';
+        document.getElementById('ergaenzungen_s2').value = '';
+        document.getElementById('ergaenzungen_s3').value = '';
+        document.getElementById('ergaenzungen_s4').value = '';
+        document.getElementById('ergaenzungen_s5').value = '';
+        document.getElementById('ergaenzungen_s6').value = '';
+        document.getElementById('ergaenzungen_s7').value = '';
+        document.getElementById('ergaenzungen_s8').value = '';
+        document.getElementById('ergaenzungen_s9').value = '';
     }
-    document.getElementById('schaeden_weitere').value = tree['weitere - Erfassung weiterer Schäden und Krankheiten'] || '';
-    document.getElementById('schaeden_beschreibung').value = tree['Beschreibung der Schäden und Krankheiten'] || '';
-    
-    // Ergänzungen
-    document.getElementById('ergaenzungen_s2').value = tree['Ergänzungen/Problembeschreibungen (S. 2)'] || '';
-    document.getElementById('ergaenzungen_s3').value = tree['Ergänzungen/Problembeschreibungen (S. 3)'] || '';
-    document.getElementById('ergaenzungen_s4').value = tree['Ergänzungen/Problembeschreibungen (S. 4)'] || '';
-    document.getElementById('ergaenzungen_s5').value = tree['Ergänzungen/Problembeschreibungen (S.5)'] || '';
-    document.getElementById('ergaenzungen_s6').value = tree['Ergänzungen/Problembeschreibungen (S. 6)'] || '';
-    document.getElementById('ergaenzungen_s7').value = tree['Ergänzungen/Problembeschreibungen (S. 7)'] || '';
-    document.getElementById('ergaenzungen_s8').value = tree['Ergänzungen/Problembeschreibungen (S.8)'] || '';
-    document.getElementById('ergaenzungen_s9').value = tree['Ergänzungen/Problembeschreibungen (S.9)'] || tree['Auffälligkeiten im Freifeld notieren'] || '';
 }
 
 export function deleteTree(index) {

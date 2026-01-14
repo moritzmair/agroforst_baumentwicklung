@@ -26,7 +26,6 @@ function setupEventListeners() {
     const importFileInput = document.getElementById('importFileInput');
     const viewDataBtn = document.getElementById('viewDataBtn');
     const savedCount = document.getElementById('savedCount');
-    const resetBtn = document.getElementById('resetBtn');
     const getLocationBtn = document.getElementById('getLocationBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
     const saveFinishBtn = document.getElementById('saveFinishBtn');
@@ -79,7 +78,6 @@ function setupEventListeners() {
     importFileInput.addEventListener('change', handleCSVImport);
     viewDataBtn.addEventListener('click', showDataScreen);
     savedCount.addEventListener('click', showDataScreen);
-    resetBtn.addEventListener('click', resetForm);
     getLocationBtn.addEventListener('click', getGPSLocation);
     clearAllBtn.addEventListener('click', clearAllData);
     startNewRecordBtn.addEventListener('click', () => {
