@@ -1,14 +1,9 @@
 // State Management
 export let trees = [];
-export let photos = [];
 export let editingTreeIndex = null;
 
 export function setTrees(newTrees) {
     trees = newTrees;
-}
-
-export function setPhotos(newPhotos) {
-    photos = newPhotos;
 }
 
 export function setEditingTreeIndex(index) {

@@ -9,7 +9,6 @@ const urlsToCache = [
     './js/helpers.js',
     './js/navigation.js',
     './js/gps.js',
-    './js/photos.js',
     './js/csv.js',
     './js/map.js',
     './js/form.js',

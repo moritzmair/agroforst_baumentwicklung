@@ -4,7 +4,6 @@ import { updateOnlineStatus } from './helpers.js';
 import { showWelcomeScreen, showFormScreen, showDataScreen, updateButtonLabels } from './navigation.js';
 import { saveTree, resetForm, clearAllData } from './form.js';
 import { getGPSLocation } from './gps.js';
-import { handlePhotoUpload } from './photos.js';
 import { exportToCSV, handleCSVImport } from './csv.js';
 import './help.js'; // Lädt Help-System
 
@@ -29,7 +28,6 @@ function setupEventListeners() {
     const savedCount = document.getElementById('savedCount');
     const resetBtn = document.getElementById('resetBtn');
     const getLocationBtn = document.getElementById('getLocationBtn');
-    const fotoInput = document.getElementById('foto');
     const clearAllBtn = document.getElementById('clearAllBtn');
     const saveFinishBtn = document.getElementById('saveFinishBtn');
     const saveNextTreeBtn = document.getElementById('saveNextTreeBtn');
@@ -80,7 +78,6 @@ function setupEventListeners() {
     savedCount.addEventListener('click', showDataScreen);
     resetBtn.addEventListener('click', resetForm);
     getLocationBtn.addEventListener('click', getGPSLocation);
-    fotoInput.addEventListener('change', handlePhotoUpload);
     clearAllBtn.addEventListener('click', clearAllData);
     startNewRecordBtn.addEventListener('click', () => {
         resetForm();

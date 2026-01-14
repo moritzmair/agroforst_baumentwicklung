@@ -266,6 +266,32 @@ header h1 {
     box-shadow: var(--shadow);
 }
 
+.photo-info-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.photo-info-box p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.photo-info-box p:first-child {
+    margin-top: 0;
+}
+
+.photo-info-box strong {
+    color: var(--primary);
+}
+
+.photo-info-box em {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
 .modal {
     display: none;
     position: fixed;

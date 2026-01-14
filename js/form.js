@@ -1,10 +1,9 @@
 // Form Handling
-import { trees, photos, editingTreeIndex, setEditingTreeIndex, updateTree, addTree, deleteTreeAtIndex, clearAllTrees } from './state.js';
+import { trees, editingTreeIndex, setEditingTreeIndex, updateTree, addTree, deleteTreeAtIndex, clearAllTrees } from './state.js';
 import { saveTreesToStorage, updateSavedCount, checkStorageUsage } from './storage.js';
 import { incrementTreeId, incrementRowId, treeExists } from './helpers.js';
 import { showWelcomeScreen, showFormScreen, updateButtonLabels } from './navigation.js';
 import { exportToCSV } from './csv.js';
-import { clearPhotos } from './photos.js';
 
 export function saveTree(action) {
     const form = document.getElementById('treeForm');
@@ -107,11 +106,6 @@ export function saveTree(action) {
     tree['Ergänzungen/Problembeschreibungen (S.8)'] = formData.get('ergaenzungen_s8') || '';
     tree['Ergänzungen/Problembeschreibungen (S.9)'] = formData.get('ergaenzungen_s9') || '';
     
-    // Fotos
-    if (photos.length > 0) {
-        tree._photos = photos;
-    }
-    
     // Speichern
     if (editingTreeIndex !== null) {
         updateTree(editingTreeIndex, tree);
@@ -193,7 +187,6 @@ export function saveTree(action) {
             });
             document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
             
-            clearPhotos();
             updateButtonLabels();
         }
     } else if (action === 'nextRow') {
@@ -232,7 +225,6 @@ export function saveTree(action) {
             });
             document.getElementById('baumscheibe_makel').value = currentBaumscheibeMakel || '';
             
-            clearPhotos();
             updateButtonLabels();
         }
     }
@@ -245,7 +237,6 @@ export function resetForm() {
     setEditingTreeIndex(null);
     document.getElementById('treeForm').reset();
     document.getElementById('locationDisplay').classList.remove('active');
-    clearPhotos();
     
     // Umfang/Durchmesser Felder wieder aktivieren
     const umfangInput = document.getElementById('umfang');
