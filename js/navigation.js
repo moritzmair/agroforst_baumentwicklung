@@ -1,5 +1,5 @@
 // Screen Navigation
-import { trees } from './state.js';
+import { trees, previousScreen, setPreviousScreen } from './state.js';
 import { formatDate, incrementTreeId, incrementRowId, treeExists } from './helpers.js';
 import { drawTreeMap } from './map.js';
 import { editTree, nextTreeInRow, nextTreeInNextRow, deleteTree } from './form.js';
@@ -27,6 +27,16 @@ export function showFormScreen() {
 }
 
 export function showDataScreen() {
+    // Speichere, von welchem Screen wir kommen
+    const welcomeVisible = document.getElementById('welcomeScreen').style.display !== 'none';
+    const formVisible = document.getElementById('treeForm').style.display !== 'none';
+    
+    if (formVisible) {
+        setPreviousScreen('form');
+    } else if (welcomeVisible) {
+        setPreviousScreen('welcome');
+    }
+    
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('treeForm').style.display = 'none';
     document.getElementById('dataScreen').style.display = 'block';
@@ -103,6 +113,15 @@ export function showDataScreen() {
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+export function backFromDataScreen() {
+    // Gehe zurück zum vorherigen Screen
+    if (previousScreen === 'form') {
+        showFormScreen();
+    } else {
+        showWelcomeScreen();
+    }
 }
 
 export function updateButtonLabels() {

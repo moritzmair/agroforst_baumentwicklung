@@ -1,6 +1,7 @@
 // State Management
 export let trees = [];
 export let editingTreeIndex = null;
+export let previousScreen = 'welcome'; // Speichert den Screen vor dem Datenbildschirm
 
 export function setTrees(newTrees) {
     trees = newTrees;
@@ -24,4 +25,8 @@ export function deleteTreeAtIndex(index) {
 
 export function clearAllTrees() {
     trees = [];
+}
+
+export function setPreviousScreen(screen) {
+    previousScreen = screen;
 }

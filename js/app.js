@@ -1,7 +1,7 @@
 // Main App Entry Point
 import { loadTreesFromStorage, updateSavedCount } from './storage.js';
 import { updateOnlineStatus, handleBaumIdInput } from './helpers.js';
-import { showWelcomeScreen, showFormScreen, showDataScreen, updateButtonLabels } from './navigation.js';
+import { showWelcomeScreen, showFormScreen, showDataScreen, updateButtonLabels, backFromDataScreen } from './navigation.js';
 import { saveTree, resetForm, clearAllData } from './form.js';
 import { getGPSLocation } from './gps.js';
 import { exportToCSV, handleCSVImport } from './csv.js';
@@ -85,7 +85,7 @@ function setupEventListeners() {
         showFormScreen();
     });
     backToWelcomeBtn.addEventListener('click', showWelcomeScreen);
-    backFromDataBtn.addEventListener('click', showWelcomeScreen);
+    backFromDataBtn.addEventListener('click', backFromDataScreen);
     
     // Close help modal when clicking outside
     window.addEventListener('click', (e) => {
