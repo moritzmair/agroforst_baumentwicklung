@@ -245,10 +245,18 @@ header h1 {
     border-radius: 6px;
     font-size: 0.9rem;
     display: none;
+    border-left: 4px solid #4caf50;
 }
 
 .location-info.active {
     display: block;
+}
+
+.location-info.error {
+    background: #ffebee;
+    border-left-color: #f44336;
+    color: #c62828;
+    font-weight: 500;
 }
 
 .photo-preview {
