@@ -56,7 +56,11 @@ export function showHelp(topic) {
             <p>Schätzt die durchschnittliche Länge der einjährigen Triebe im oberen äußeren Baumbereich (Wachstum im vergangenen Jahr).</p>
             <p>Diese beginnen an ihrem Ansatz, der "Triebbasisnarbe". Dort sitzen viele Knospen gedrungen zusammen:</p>
             <img src="images/trieb.jpg" alt="Trieb-Erklärung">
-            <p><strong>Bei toten Bäumen:</strong> 0 eintragen</p>
+            <p><strong>Sonderfälle:</strong></p>
+            <ul>
+                <li><strong>Keine einjährigen Triebe vorhanden:</strong> -1 eintragen</li>
+                <li><strong>Bei toten Bäumen:</strong> 0 eintragen</li>
+            </ul>
         `,
         
         'neigung': `
