@@ -97,14 +97,14 @@ export function saveTree(action) {
     tree['Beschreibung der Schäden und Krankheiten'] = formData.get('schaeden_beschreibung') || '';
     
     // Ergänzungen
-    tree['Ergänzungen/Problembeschreibungen (S. 2)'] = formData.get('ergaenzungen_s2') || '';
-    tree['Ergänzungen/Problembeschreibungen (S. 3)'] = formData.get('ergaenzungen_s3') || '';
-    tree['Ergänzungen/Problembeschreibungen (S. 4)'] = formData.get('ergaenzungen_s4') || '';
-    tree['Ergänzungen/Problembeschreibungen (S.5)'] = formData.get('ergaenzungen_s5') || '';
-    tree['Ergänzungen/Problembeschreibungen (S. 6)'] = formData.get('ergaenzungen_s6') || '';
-    tree['Ergänzungen/Problembeschreibungen (S. 7)'] = formData.get('ergaenzungen_s7') || '';
-    tree['Ergänzungen/Problembeschreibungen (S.8)'] = formData.get('ergaenzungen_s8') || '';
-    tree['Ergänzungen/Problembeschreibungen (S.9)'] = formData.get('ergaenzungen_s9') || '';
+    tree['Ergänzungen (Standort)'] = formData.get('ergaenzungen_standort') || '';
+    tree['Ergänzungen (Wuchshöhe)'] = formData.get('ergaenzungen_wuchshoehe') || '';
+    tree['Ergänzungen (Umfang)'] = formData.get('ergaenzungen_umfang') || '';
+    tree['Ergänzungen (Vitalität)'] = formData.get('ergaenzungen_vitalitaet') || '';
+    tree['Ergänzungen (Statik)'] = formData.get('ergaenzungen_statik') || '';
+    tree['Ergänzungen (Gehölzschutz)'] = formData.get('ergaenzungen_gehoelzschutz') || '';
+    tree['Ergänzungen (Baumscheibe)'] = formData.get('ergaenzungen_baumscheibe') || '';
+    tree['Ergänzungen (Schäden)'] = formData.get('ergaenzungen_schaeden') || '';
     
     // Speichern
     if (editingTreeIndex !== null) {
@@ -379,15 +379,15 @@ function loadTreeToForm(tree, loadMeasurements = true) {
         document.getElementById('schaeden_weitere').value = tree['weitere - Erfassung weiterer Schäden und Krankheiten'] || '';
         document.getElementById('schaeden_beschreibung').value = tree['Beschreibung der Schäden und Krankheiten'] || '';
         
-        // Ergänzungen
-        document.getElementById('ergaenzungen_s2').value = tree['Ergänzungen/Problembeschreibungen (S. 2)'] || '';
-        document.getElementById('ergaenzungen_s3').value = tree['Ergänzungen/Problembeschreibungen (S. 3)'] || '';
-        document.getElementById('ergaenzungen_s4').value = tree['Ergänzungen/Problembeschreibungen (S. 4)'] || '';
-        document.getElementById('ergaenzungen_s5').value = tree['Ergänzungen/Problembeschreibungen (S.5)'] || '';
-        document.getElementById('ergaenzungen_s6').value = tree['Ergänzungen/Problembeschreibungen (S. 6)'] || '';
-        document.getElementById('ergaenzungen_s7').value = tree['Ergänzungen/Problembeschreibungen (S. 7)'] || '';
-        document.getElementById('ergaenzungen_s8').value = tree['Ergänzungen/Problembeschreibungen (S.8)'] || '';
-        document.getElementById('ergaenzungen_s9').value = tree['Ergänzungen/Problembeschreibungen (S.9)'] || tree['Auffälligkeiten im Freifeld notieren'] || '';
+        // Ergänzungen - mit Rückwärtskompatibilität für alte Feldnamen
+        document.getElementById('ergaenzungen_standort').value = tree['Ergänzungen (Standort)'] || tree['Ergänzungen/Problembeschreibungen (S. 2)'] || '';
+        document.getElementById('ergaenzungen_wuchshoehe').value = tree['Ergänzungen (Wuchshöhe)'] || tree['Ergänzungen/Problembeschreibungen (S. 3)'] || '';
+        document.getElementById('ergaenzungen_umfang').value = tree['Ergänzungen (Umfang)'] || tree['Ergänzungen/Problembeschreibungen (S. 4)'] || '';
+        document.getElementById('ergaenzungen_vitalitaet').value = tree['Ergänzungen (Vitalität)'] || tree['Ergänzungen/Problembeschreibungen (S.5)'] || '';
+        document.getElementById('ergaenzungen_statik').value = tree['Ergänzungen (Statik)'] || tree['Ergänzungen/Problembeschreibungen (S. 6)'] || '';
+        document.getElementById('ergaenzungen_gehoelzschutz').value = tree['Ergänzungen (Gehölzschutz)'] || tree['Ergänzungen/Problembeschreibungen (S. 7)'] || '';
+        document.getElementById('ergaenzungen_baumscheibe').value = tree['Ergänzungen (Baumscheibe)'] || tree['Ergänzungen/Problembeschreibungen (S.8)'] || '';
+        document.getElementById('ergaenzungen_schaeden').value = tree['Ergänzungen (Schäden)'] || tree['Ergänzungen/Problembeschreibungen (S.9)'] || tree['Auffälligkeiten im Freifeld notieren'] || '';
     } else {
         // Beim nächsten Baum: Textfelder leer lassen
         document.getElementById('schutz_andere').value = '';
@@ -395,14 +395,14 @@ function loadTreeToForm(tree, loadMeasurements = true) {
         document.getElementById('baumscheibe_makel').value = '';
         document.getElementById('schaeden_weitere').value = '';
         document.getElementById('schaeden_beschreibung').value = '';
-        document.getElementById('ergaenzungen_s2').value = '';
-        document.getElementById('ergaenzungen_s3').value = '';
-        document.getElementById('ergaenzungen_s4').value = '';
-        document.getElementById('ergaenzungen_s5').value = '';
-        document.getElementById('ergaenzungen_s6').value = '';
-        document.getElementById('ergaenzungen_s7').value = '';
-        document.getElementById('ergaenzungen_s8').value = '';
-        document.getElementById('ergaenzungen_s9').value = '';
+        document.getElementById('ergaenzungen_standort').value = '';
+        document.getElementById('ergaenzungen_wuchshoehe').value = '';
+        document.getElementById('ergaenzungen_umfang').value = '';
+        document.getElementById('ergaenzungen_vitalitaet').value = '';
+        document.getElementById('ergaenzungen_statik').value = '';
+        document.getElementById('ergaenzungen_gehoelzschutz').value = '';
+        document.getElementById('ergaenzungen_baumscheibe').value = '';
+        document.getElementById('ergaenzungen_schaeden').value = '';
     }
 }
 

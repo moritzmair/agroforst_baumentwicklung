@@ -10,44 +10,87 @@ export function exportToCSV() {
         return;
     }
     
-    // CSV Header
+    // CSV Header (neue Namen)
     const headers = [
-        'Erstellt am', 'Zuletzt bearbeitet', 'x', 'y',
-        'ID (z.B. "LRO-B-9")',
-        'Name(n) der durchführenden Person(en)',
+        'CreationDate',
+        'x',
+        'y',
+        'Jahr',
+        'ID',
+        'Person',
         'Untersuchte Baumart',
-        'Ergänzungen/Problembeschreibungen (S. 2)',
+        'Ergänzungen (Standort)',
         'Höhe in XXX cm',
-        'Ergänzungen/Problembeschreibungen (S. 3)',
-        'Umfang in XXX mm (Standard)',
-        'Durchmesser in XXX mm (falls Umfang nicht möglich)',
-        'Ergänzungen/Problembeschreibungen (S. 4)',
-        'Durchschnittliche Länge der einjährigen Triebe in XXX cm',
-        'Ergänzungen/Problembeschreibungen (S.5)',
+        'Ergänzungen (Wuchshöhe)',
+        'Umfang in mm',
+        'Durchmesser in mm',
+        'Ergänzungen (Umfang)',
+        'Trieblänge in XXX cm',
+        'Ergänzungen (Vitalität)',
         'Neigung',
         'Ästungshöhe in XXX cm',
-        'Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm',
-        'Anzahl der > 3 cm dicken Äste bis zur Höhe von 2 m',
-        'Ergänzungen/Problembeschreibungen (S. 6)',
+        'Kronenansatz in XXX cm',
+        'Ergänzungen (Statik)',
         'Art des Gehölzschutzes',
         'andere - Art des Gehölzschutzes',
         'Zustand des Gehölzschutzes',
         'Ist der Stamm geweißelt?',
         'Wie ist der Baum angebunden?',
-        'Ergänzungen/Problembeschreibungen (S. 7)',
+        'Ergänzungen (Gehölzschutz)',
         'Art des Managements',
         'andere - Art des Managements',
         'Zustand der Baumscheibe',
         'weitere Makel - Zustand der Baumscheibe',
-        'Ergänzungen/Problembeschreibungen (S.8)',
+        'Ergänzungen (Baumscheibe)',
         'Anzahl offener Schnittwunden',
         'Erfassung weiterer Schäden und Krankheiten',
         'weitere - Erfassung weiterer Schäden und Krankheiten',
         'Beschreibung der Schäden und Krankheiten',
         'Auffälligkeiten im Freifeld notieren',
-        'Ergänzungen/Problembeschreibungen (S.9)',
+        'Ergänzungen (Schäden)',
         'Feedback zur App?'
     ];
+    
+    // Mapping von neuen Headern zu internen Feldnamen (mit Rückwärtskompatibilität für Import)
+    const fieldMapping = {
+        'CreationDate': 'createdAt',
+        'x': 'x',
+        'y': 'y',
+        'Jahr': 'createdAt',
+        'ID': 'ID (z.B. "LRO-B-9")',
+        'Person': 'Name(n) der durchführenden Person(en)',
+        'Untersuchte Baumart': 'Untersuchte Baumart',
+        'Ergänzungen (Standort)': 'Ergänzungen (Standort)',
+        'Höhe in XXX cm': 'Höhe in XXX cm',
+        'Ergänzungen (Wuchshöhe)': 'Ergänzungen (Wuchshöhe)',
+        'Umfang in mm': 'Umfang in XXX mm (Standard)',
+        'Durchmesser in mm': 'Durchmesser in XXX mm (falls Umfang nicht möglich)',
+        'Ergänzungen (Umfang)': 'Ergänzungen (Umfang)',
+        'Trieblänge in XXX cm': 'Durchschnittliche Länge der einjährigen Triebe in XXX cm',
+        'Ergänzungen (Vitalität)': 'Ergänzungen (Vitalität)',
+        'Neigung': 'Neigung',
+        'Ästungshöhe in XXX cm': 'Ästungshöhe in XXX cm',
+        'Kronenansatz in XXX cm': 'Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm',
+        'Ergänzungen (Statik)': 'Ergänzungen (Statik)',
+        'Art des Gehölzschutzes': 'Art des Gehölzschutzes',
+        'andere - Art des Gehölzschutzes': 'andere - Art des Gehölzschutzes',
+        'Zustand des Gehölzschutzes': 'Zustand des Gehölzschutzes',
+        'Ist der Stamm geweißelt?': 'Ist der Stamm geweißelt?',
+        'Wie ist der Baum angebunden?': 'Wie ist der Baum angebunden?',
+        'Ergänzungen (Gehölzschutz)': 'Ergänzungen (Gehölzschutz)',
+        'Art des Managements': 'Art des Managements',
+        'andere - Art des Managements': 'andere - Art des Managements',
+        'Zustand der Baumscheibe': 'Zustand der Baumscheibe',
+        'weitere Makel - Zustand der Baumscheibe': 'weitere Makel - Zustand der Baumscheibe',
+        'Ergänzungen (Baumscheibe)': 'Ergänzungen (Baumscheibe)',
+        'Anzahl offener Schnittwunden': 'Anzahl offener Schnittwunden',
+        'Erfassung weiterer Schäden und Krankheiten': 'Erfassung weiterer Schäden und Krankheiten',
+        'weitere - Erfassung weiterer Schäden und Krankheiten': 'weitere - Erfassung weiterer Schäden und Krankheiten',
+        'Beschreibung der Schäden und Krankheiten': 'Beschreibung der Schäden und Krankheiten',
+        'Auffälligkeiten im Freifeld notieren': 'Auffälligkeiten im Freifeld notieren',
+        'Ergänzungen (Schäden)': 'Ergänzungen (Schäden)',
+        'Feedback zur App?': 'Feedback zur App?'
+    };
     
     // CSV Rows
     const separator = ';';
@@ -55,12 +98,19 @@ export function exportToCSV() {
     
     trees.forEach(tree => {
         const row = headers.map(header => {
-            let value = tree[header];
+            let value = '';
+            const internalField = fieldMapping[header];
             
-            // Spezielle Behandlung für Datum
-            if (header === 'Erstellt am') value = formatDate(tree.createdAt);
-            else if (header === 'Zuletzt bearbeitet') value = formatDate(tree.updatedAt);
-            else value = value || '';
+            // Spezielle Behandlung für Datum und Jahr
+            if (header === 'CreationDate') {
+                value = formatDate(tree.createdAt);
+            } else if (header === 'Jahr') {
+                // Jahr aus createdAt extrahieren
+                const date = new Date(tree.createdAt);
+                value = date.getFullYear().toString();
+            } else {
+                value = tree[internalField] || '';
+            }
             
             value = String(value);
             
