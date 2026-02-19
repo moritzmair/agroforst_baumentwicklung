@@ -15,7 +15,7 @@ export function saveTree(action) {
     // Plausibilitätsprüfungen
     const hoehe = parseInt(document.getElementById('hoehe').value);
     const astungshoehe = document.getElementById('astungshoehe').value;
-    const ersterAst = document.getElementById('erster_ast').value;
+    const ersterAst = document.getElementById('kronenansatz').value;
     
     if (astungshoehe && parseInt(astungshoehe) > hoehe) {
         if (!confirm(`⚠️ Die Ästungshöhe (${astungshoehe} cm) ist größer als die Baumhöhe (${hoehe} cm). Trotzdem speichern?`)) {
@@ -66,7 +66,7 @@ export function saveTree(action) {
     tree['Durchschnittliche Länge der einjährigen Triebe in XXX cm'] = formData.get('trieblaenge');
     tree['Neigung'] = formData.get('neigung');
     tree['Ästungshöhe in XXX cm'] = formData.get('astungshoehe') || '';
-    tree['Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm'] = formData.get('erster_ast') || '';
+    tree['Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm'] = formData.get('kronenansatz') || '';
     tree['Anzahl offener Schnittwunden'] = formData.get('schnittwunden') || '0';
     
     // Checkboxen - Gehölzschutz
@@ -307,7 +307,7 @@ function loadTreeToForm(tree, loadMeasurements = true) {
         document.getElementById('trieblaenge').value = tree['Durchschnittliche Länge der einjährigen Triebe in XXX cm'] || '';
         document.getElementById('neigung').value = tree['Neigung'] || '';
         document.getElementById('astungshoehe').value = tree['Ästungshöhe in XXX cm'] || '';
-        document.getElementById('erster_ast').value = tree['Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm'] || '';
+        document.getElementById('kronenansatz').value = tree['Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm'] || '';
         document.getElementById('schnittwunden').value = tree['Anzahl offener Schnittwunden'] || '0';
     } else {
         document.getElementById('hoehe').value = '';
@@ -316,7 +316,7 @@ function loadTreeToForm(tree, loadMeasurements = true) {
         document.getElementById('trieblaenge').value = '';
         document.getElementById('neigung').value = '';
         document.getElementById('astungshoehe').value = '';
-        document.getElementById('erster_ast').value = '';
+        document.getElementById('kronenansatz').value = '';
         document.getElementById('schnittwunden').value = '0';
     }
     
