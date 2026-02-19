@@ -33,6 +33,8 @@
         <!-- Startseite -->
         <div id="welcomeScreen" class="welcome-screen">
             <div class="welcome-content">
+                <button id="startNewRecordBtn" class="btn btn-primary btn-large" style="margin-bottom: 2rem;">🌳 Neue Erfassung starten</button>
+
                 <div class="project-info">
                     <h2>🌾 Über agroforst-monitoring</h2>
                     <p>Diese App ist Teil des <strong>agroforst-monitoring</strong>, einem bürgerwissenschaftlichen Forschungsnetzwerk zur Langzeit-Erforschung moderner Agroforst-Ökosysteme – landwirtschaftlich genutzte Flächen, auf denen Bäume mit Acker, Wiese oder Weide kombiniert werden.</p>
@@ -44,7 +46,17 @@
                     </p>
                 </div>
 
-                <button id="startNewRecordBtn" class="btn btn-primary btn-large">🌳 Neue Erfassung starten</button>
+                <div class="project-info" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+                    <h2>📤 Wichtig: Datenübermittlung</h2>
+                    <p><strong>Diese App dient nur zur Datenerfassung vor Ort.</strong></p>
+                    <p>Die erfassten Daten werden lokal auf Ihrem Gerät gespeichert. Um die Daten zu übermitteln:</p>
+                    <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                        <li>Erfassen Sie alle Bäume mit der App</li>
+                        <li>Exportieren Sie die Daten über <strong>"📊 Daten ansehen"</strong> → <strong>"💾 CSV Export"</strong></li>
+                        <li>Laden Sie die CSV-Datei im <strong>Uploadbereich Ihrer Lokalgruppe</strong> hoch (wie auch manuell erstellte Datentabellen)</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><em>💡 Tipp: Exportieren Sie regelmäßig ein Backup Ihrer Daten!</em></p>
+                </div>
 
                 <h2 style="margin-top: 2.5rem;">📱 App Installation</h2>
                 
@@ -398,6 +410,12 @@
         <!-- Data Screen -->
         <div id="dataScreen" class="data-screen" style="display:none;">
             <h2>Gespeicherte Baumdaten</h2>
+            
+            <div class="photo-info-box" style="margin-bottom: 1.5rem; background: #e3f2fd; border-left: 4px solid #2196f3;">
+                <p><strong>💾 Datenübermittlung:</strong></p>
+                <p>Exportieren Sie die erfassten Daten als CSV-Datei und laden Sie diese im <strong>Uploadbereich Ihrer Lokalgruppe</strong> hoch. Die Daten können nicht direkt über die App übermittelt werden.</p>
+                <p><em>Laden Sie auch Ihre Fotos mit aussagekräftigen Dateinamen (z.B. mit Baum-ID) im gleichen Uploadbereich hoch.</em></p>
+            </div>
             
             <div class="data-actions">
                 <button id="exportBtn" class="btn btn-secondary">💾 CSV Export</button>

@@ -13,6 +13,7 @@ export function exportToCSV() {
     // CSV Header (neue Namen)
     const headers = [
         'CreationDate',
+        'UpdatedDate',
         'x',
         'y',
         'Jahr',
@@ -54,6 +55,7 @@ export function exportToCSV() {
     // Mapping von neuen Headern zu internen Feldnamen (mit Rückwärtskompatibilität für Import)
     const fieldMapping = {
         'CreationDate': 'createdAt',
+        'UpdatedDate': 'updatedAt',
         'x': 'x',
         'y': 'y',
         'Jahr': 'createdAt',
@@ -104,6 +106,8 @@ export function exportToCSV() {
             // Spezielle Behandlung für Datum und Jahr
             if (header === 'CreationDate') {
                 value = formatDate(tree.createdAt);
+            } else if (header === 'UpdatedDate') {
+                value = formatDate(tree.updatedAt);
             } else if (header === 'Jahr') {
                 // Jahr aus createdAt extrahieren
                 const date = new Date(tree.createdAt);
@@ -155,7 +159,7 @@ export function exportToCSV() {
     link.click();
     document.body.removeChild(link);
     
-    alert(`✓ CSV-Export erfolgreich (${trees.length} Bäume)`);
+    alert(`✓ CSV-Export erfolgreich (${trees.length} Bäume)\n\n📤 Nächster Schritt:\nLaden Sie die CSV-Datei im Uploadbereich Ihrer Lokalgruppe hoch.`);
 }
 
 export function handleCSVImport(e) {
