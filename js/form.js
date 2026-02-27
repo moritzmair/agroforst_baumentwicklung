@@ -220,8 +220,8 @@ export function saveTree(action) {
         }
     }
     
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to top - kein 'smooth' wegen Firefox Android Tastatur-Bug
+    window.scrollTo(0, 0);
 }
 
 export function resetForm() {

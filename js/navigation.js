@@ -23,7 +23,9 @@ export function showFormScreen() {
     // Button-Labels aktualisieren wenn Formular angezeigt wird
     setTimeout(() => updateButtonLabels(), 50);
     // Nach oben scrollen damit alle Felder sichtbar sind
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // WICHTIG: Kein 'smooth' hier - auf Firefox Android bewirkt eine laufende
+    // Scroll-Animation dass die Tastatur sofort wieder geschlossen wird
+    window.scrollTo(0, 0);
 }
 
 export function showDataScreen() {
@@ -112,7 +114,7 @@ export function showDataScreen() {
         setTimeout(() => drawTreeMap(), 100);
     }
     
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
 }
 
 export function backFromDataScreen() {

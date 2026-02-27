@@ -112,12 +112,12 @@
                 
                 <div class="form-group">
                     <label for="name">Name der durchführenden Person(en) *</label>
-                    <input type="text" id="name" name="name" required>
+                    <input type="text" id="name" name="name" required autocomplete="name">
                 </div>
 
                 <div class="form-group">
                     <label for="baumart">Untersuchte Baumart *</label>
-                    <input type="text" id="baumart" name="baumart" list="baumartList" required>
+                    <input type="text" id="baumart" name="baumart" list="baumartList" required autocomplete="off">
                     <datalist id="baumartList">
                         <option value="Obst">
                         <option value="Kirsche">
@@ -134,7 +134,7 @@
                         Baum-ID (z.B. "LRO-B-09") *
                         <button type="button" class="help-btn" onclick="showHelp('baumId')">?</button>
                     </label>
-                    <input type="text" id="baumId" name="baumId" placeholder="LRO-B-09" required pattern="[A-ZÄÖÜ]+-[A-ZÄÖÜ]+-[0-9]+(\.[0-9]+)?">
+                    <input type="text" id="baumId" name="baumId" placeholder="LRO-B-09" required pattern="[A-ZÄÖÜ]+-[A-ZÄÖÜ]+-[0-9]+(\.[0-9]+)?" autocomplete="off">
                     <small>Format: Lokalgruppe-Reihe-Nummer (z.B. LRO-B-09 oder DA-C-02.1)</small>
                 </div>
 
@@ -161,7 +161,7 @@
                 
                 <div class="form-group">
                     <label for="hoehe">Höhe in cm *</label>
-                    <input type="number" id="hoehe" name="hoehe" min="0" max="10000" required>
+                    <input type="number" id="hoehe" name="hoehe" min="0" max="10000" required inputmode="numeric" autocomplete="off">
                     <small>Messung mit Zollstock, Teleskopstab oder Försterdreieck</small>
                 </div>
 
@@ -177,13 +177,13 @@
                 
                 <div class="form-group">
                     <label for="umfang">Umfang in mm (Standard)</label>
-                    <input type="number" id="umfang" name="umfang" min="0" max="5000">
+                    <input type="number" id="umfang" name="umfang" min="0" max="5000" inputmode="numeric" autocomplete="off">
                     <small>Markierung bei 1,3 m am eigenen Körper machen (z.B. mit Kreppband)</small>
                 </div>
 
                 <div class="form-group">
                     <label for="durchmesser">Durchmesser in mm (falls Umfang nicht möglich)</label>
-                    <input type="number" id="durchmesser" name="durchmesser" min="0" max="2000">
+                    <input type="number" id="durchmesser" name="durchmesser" min="0" max="2000" inputmode="numeric" autocomplete="off">
                     <small>Messung mit Zollstock, nur ausfüllen wenn Umfang nicht messbar</small>
                 </div>
 
@@ -202,7 +202,7 @@
                 
                 <div class="form-group">
                     <label for="trieblaenge">Durchschnittliche Länge der einjährigen Triebe in cm *</label>
-                    <input type="number" id="trieblaenge" name="trieblaenge" min="-1" max="500" required>
+                    <input type="number" id="trieblaenge" name="trieblaenge" min="-1" max="500" required inputmode="numeric" autocomplete="off">
                     <small>Wenn keine einjährigen Triebe vorhanden: -1 eintragen. Bei toten Bäumen: 0 eintragen</small>
                 </div>
 
@@ -231,13 +231,13 @@
 
                 <div class="form-group">
                     <label for="astungshoehe">Ästungshöhe in cm</label>
-                    <input type="number" id="astungshoehe" name="astungshoehe" min="100" max="10000">
+                    <input type="number" id="astungshoehe" name="astungshoehe" min="100" max="10000" inputmode="numeric" autocomplete="off">
                     <small>Mindesthöhe 100 cm, nur eintragen wenn klar erkennbar</small>
                 </div>
 
                 <div class="form-group">
                     <label for="kronenansatz">Kronenansatz: Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? (cm)</label>
-                    <input type="number" id="kronenansatz" name="kronenansatz" min="0" max="10000">
+                    <input type="number" id="kronenansatz" name="kronenansatz" min="0" max="10000" inputmode="numeric" autocomplete="off">
                 </div>
 
                 <div class="form-group">
@@ -261,7 +261,7 @@
                         <label><input type="checkbox" name="schutz" value="verzinktes Metallgitter"> verzinktes Metallgitter</label>
                         <label><input type="checkbox" name="schutz" value="andere"> andere</label>
                     </div>
-                    <input type="text" id="schutz_andere" name="schutz_andere" placeholder="Beschreibung bei 'andere'" class="mt-1">
+                    <input type="text" id="schutz_andere" name="schutz_andere" placeholder="Beschreibung bei 'andere'" class="mt-1" autocomplete="off">
                 </div>
 
                 <div class="form-group">
@@ -318,7 +318,7 @@
                         <label><input type="checkbox" name="management" value="Baumscheibenvlies"> Baumscheibenvlies oder Jutestoff</label>
                         <label><input type="checkbox" name="management" value="andere"> andere</label>
                     </div>
-                    <input type="text" id="management_andere" name="management_andere" placeholder="Beschreibung bei 'andere'" class="mt-1">
+                    <input type="text" id="management_andere" name="management_andere" placeholder="Beschreibung bei 'andere'" class="mt-1" autocomplete="off">
                 </div>
 
                 <div class="form-group">
@@ -332,7 +332,7 @@
                         <label><input type="checkbox" name="baumscheibe_zustand" value="wurzeln"> freiliegende Wurzeln</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="weitere Makel"> weitere Makel</label>
                     </div>
-                    <input type="text" id="baumscheibe_makel" name="baumscheibe_makel" placeholder="Beschreibung weitere Makel" class="mt-1">
+                    <input type="text" id="baumscheibe_makel" name="baumscheibe_makel" placeholder="Beschreibung weitere Makel" class="mt-1" autocomplete="off">
                 </div>
 
                 <div class="form-group">
@@ -347,7 +347,7 @@
                 
                 <div class="form-group">
                     <label for="schnittwunden">Anzahl offener Schnittwunden (> 3 cm)</label>
-                    <input type="number" id="schnittwunden" name="schnittwunden" min="0" max="100" value="0">
+                    <input type="number" id="schnittwunden" name="schnittwunden" min="0" max="100" value="0" inputmode="numeric" autocomplete="off">
                 </div>
 
                 <div class="form-group">
@@ -363,7 +363,7 @@
                         <label><input type="checkbox" name="schaeden" value="abgebrochene Spitze"> abgebrochene Spitze</label>
                         <label><input type="checkbox" name="schaeden" value="weitere"> weitere</label>
                     </div>
-                    <input type="text" id="schaeden_weitere" name="schaeden_weitere" placeholder="Beschreibung weitere Schäden" class="mt-1">
+                    <input type="text" id="schaeden_weitere" name="schaeden_weitere" placeholder="Beschreibung weitere Schäden" class="mt-1" autocomplete="off">
                 </div>
 
                 <div class="form-group">

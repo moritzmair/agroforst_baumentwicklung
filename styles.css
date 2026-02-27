@@ -180,6 +180,9 @@ header h1 {
     font-size: 1rem;
     font-family: inherit;
     transition: border-color 0.2s;
+    /* Firefox Android: touch-action: manipulation verhindert Doppel-Tap-Zoom-Verzögerung
+       und verbessert die Tastatur-Stabilität bei Eingabefeldern */
+    touch-action: manipulation;
 }
 
 .form-group input:focus,
