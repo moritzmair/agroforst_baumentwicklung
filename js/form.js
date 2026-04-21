@@ -60,6 +60,7 @@ export function saveTree(action) {
     tree['ID (z.B. "LRO-B-9")'] = formData.get('baumId');
     tree['Name(n) der durchführenden Person(en)'] = formData.get('name');
     tree['Untersuchte Baumart'] = formData.get('baumart');
+    tree['Nachpflanzung'] = formData.get('nachpflanzung') || 'Nein';
     tree['Höhe in XXX cm'] = formData.get('hoehe');
     tree['Umfang in XXX mm (Standard)'] = formData.get('umfang') || '';
     tree['Durchmesser in XXX mm (falls Umfang nicht möglich)'] = formData.get('durchmesser') || '';
@@ -297,6 +298,7 @@ function loadTreeToForm(tree, loadMeasurements = true) {
     // Basis-Felder
     document.getElementById('name').value = tree['Name(n) der durchführenden Person(en)'] || '';
     document.getElementById('baumart').value = tree['Untersuchte Baumart'] || '';
+    document.getElementById('nachpflanzung').value = tree['Nachpflanzung'] || 'Nein';
     document.getElementById('baumId').value = tree['ID (z.B. "LRO-B-9")'] || '';
     
     // Messungen nur laden wenn gewünscht (beim Bearbeiten, nicht beim nächsten Baum)
