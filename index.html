@@ -231,9 +231,9 @@
                     </label>
                     <select id="neigung" name="neigung" required>
                         <option value="">Bitte wählen...</option>
-                        <option value="Sehr geneigt (> 30° Neigung)">Sehr geneigt (> 30° Neigung)</option>
-                        <option value="Leicht geneigt (> 10° Neigung)">Leicht geneigt (> 10° Neigung)</option>
                         <option value="Sehr gerade (< 10° Neigung)">Sehr gerade (< 10° Neigung)</option>
+                        <option value="Leicht geneigt (> 10° Neigung)">Leicht geneigt (> 10° Neigung)</option>
+                        <option value="Sehr geneigt (> 30° Neigung)">Sehr geneigt (> 30° Neigung)</option>
                     </select>
                 </div>
 
@@ -277,7 +277,7 @@
                     <select id="schutz_zustand" name="schutz_zustand">
                         <option value="">Bitte wählen...</option>
                         <option value="nicht vorhanden">nicht vorhanden</option>
-                        <option value="nicht intakt">nicht intakt / funktional</option>
+                        <option value="nicht intakt / funktional">nicht intakt / funktional</option>
                         <option value="beschädigt, aber funktional">beschädigt, aber funktional</option>
                         <option value="voll intakt">voll intakt</option>
                     </select>
@@ -318,12 +318,12 @@
                 <div class="form-group">
                     <label>Art des Managements</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="management" value="kein Management"> kein bestimmtes Management erkennbar</label>
-                        <label><input type="checkbox" name="management" value="freigehackt"> freigehackt, offener Boden</label>
-                        <label><input type="checkbox" name="management" value="gemulcht Hackschnitzel"> gemulcht mit Hackschnitzeln</label>
-                        <label><input type="checkbox" name="management" value="gemulcht Mist"> gemulcht mit Mist/Kompost</label>
-                        <label><input type="checkbox" name="management" value="gemulcht Grasschnitt"> gemulcht mit Grasschnitt</label>
-                        <label><input type="checkbox" name="management" value="Baumscheibenvlies"> Baumscheibenvlies oder Jutestoff</label>
+                        <label><input type="checkbox" name="management" value="kein bestimmtes Management erkennbar"> kein bestimmtes Management erkennbar</label>
+                        <label><input type="checkbox" name="management" value="freigehackt bzw. offener Boden"> freigehackt bzw. offener Boden</label>
+                        <label><input type="checkbox" name="management" value="gemulcht mit Hackschnitzeln"> gemulcht mit Hackschnitzeln</label>
+                        <label><input type="checkbox" name="management" value="gemulcht mit Mist/ Kompost"> gemulcht mit Mist/ Kompost</label>
+                        <label><input type="checkbox" name="management" value="gemulcht mit Grasschnitt"> gemulcht mit Grasschnitt</label>
+                        <label><input type="checkbox" name="management" value="Baumscheibenvlies oder Jutestoff"> Baumscheibenvlies oder Jutestoff</label>
                         <label><input type="checkbox" name="management" value="andere"> andere</label>
                     </div>
                     <input type="text" id="management_andere" name="management_andere" placeholder="Beschreibung bei 'andere'" class="mt-1" autocomplete="off">
@@ -332,12 +332,12 @@
                 <div class="form-group">
                     <label>Zustand der Baumscheibe</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="keine Pflanzen"> keine oder kaum andere Pflanzen</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="spärlich"> spärlich mit anderen Pflanzen bewachsen (<50% Deckung)</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="dicht"> dicht mit anderen Pflanzen bewachsen (>50% Deckung)</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="klein"> Durchmesser der Baumscheibe < 60 cm</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="Mäusegänge"> Mäusegänge deutlich erkennbar</label>
-                        <label><input type="checkbox" name="baumscheibe_zustand" value="wurzeln"> freiliegende Wurzeln</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="keine oder kaum andere Pflanzen"> keine oder kaum andere Pflanzen</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="spärlich mit anderen Pflanzen bewachsen"> spärlich mit anderen Pflanzen bewachsen</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="dicht mit anderen Pflanzen bewachsen"> dicht mit anderen Pflanzen bewachsen</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="Durchmesser der Baumscheibe <60 cm"> Durchmesser der Baumscheibe &lt;60 cm</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="Mäusegänge deutlich erkennbar"> Mäusegänge deutlich erkennbar</label>
+                        <label><input type="checkbox" name="baumscheibe_zustand" value="freiliegende Wurzeln"> freiliegende Wurzeln</label>
                         <label><input type="checkbox" name="baumscheibe_zustand" value="weitere Makel"> weitere Makel</label>
                     </div>
                     <input type="text" id="baumscheibe_makel" name="baumscheibe_makel" placeholder="Beschreibung weitere Makel" class="mt-1" autocomplete="off">
@@ -363,7 +363,7 @@
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="schaeden" value="verbissen"> verbissen (abgeschabte Rinde)</label>
                         <label><input type="checkbox" name="schaeden" value="verfegt"> verfegt (länglich abgeschabte Rinde)</label>
-                        <label><input type="checkbox" name="schaeden" value="Rindenschaden durch Pfosten/Verbissschutz"> Rindenschaden durch Pfosten/Verbissschutz</label>
+                        <label><input type="checkbox" name="schaeden" value="Rindenschaden durch Pfosten/ Verbissschutz"> Rindenschaden durch Pfosten/ Verbissschutz</label>
                         <label><input type="checkbox" name="schaeden" value="Rindennekrose"> Rindennekrose (tote Rinde)</label>
                         <label><input type="checkbox" name="schaeden" value="Pilzbefall"> Pilzbefall</label>
                         <label><input type="checkbox" name="schaeden" value="Insektenbohrlöcher/-fraßstellen"> Insektenbohrlöcher/-fraßstellen</label>
