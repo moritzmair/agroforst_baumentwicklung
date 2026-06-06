@@ -435,8 +435,8 @@ function screenToTree(screenX, screenY) {
 }
 
 // Hit-Test: Finde angeklickten Baum
-function findTreeAtPosition(x, y) {
-    const hitRadius = 12; // Fixed pixel hit radius matching drawn circle size
+function findTreeAtPosition(x, y, touch = false) {
+    const hitRadius = touch ? 22 : 12; // Größerer Trefferbereich für Touch
     
     for (let i = treePositions.length - 1; i >= 0; i--) {
         const pos = treePositions[i];
@@ -594,10 +594,11 @@ function onTouchStart(e) {
     e.preventDefault();
     
     if (e.touches.length === 1) {
-        // Single touch: Pan
+        // Single touch: potential tap or pan – don't set isDragging yet
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        mapState.isDragging = true;
+        mapState.isDragging = false;
+        mapState.hasDragged = false;
         mapState.lastX = touch.clientX - rect.left;
         mapState.lastY = touch.clientY - rect.top;
     } else if (e.touches.length === 2) {
@@ -617,7 +618,7 @@ function onTouchStart(e) {
 function onTouchMove(e) {
     e.preventDefault();
     
-    if (e.touches.length === 1 && mapState.isDragging && !mapState.isPinching) {
+    if (e.touches.length === 1 && !mapState.isPinching) {
         // Single touch: Pan
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
@@ -626,14 +627,22 @@ function onTouchMove(e) {
         
         const deltaX = touchX - mapState.lastX;
         const deltaY = touchY - mapState.lastY;
-        
-        mapState.offsetX += deltaX;
-        mapState.offsetY += deltaY;
-        
-        mapState.lastX = touchX;
-        mapState.lastY = touchY;
-        
-        redrawMap();
+
+        // Erst ab 5px Bewegung als Drag werten (Finger sind ungenauer als Maus)
+        if (!mapState.isDragging && Math.abs(deltaX) + Math.abs(deltaY) > 5) {
+            mapState.isDragging = true;
+            mapState.hasDragged = true;
+        }
+
+        if (mapState.isDragging) {
+            mapState.offsetX += deltaX;
+            mapState.offsetY += deltaY;
+            
+            mapState.lastX = touchX;
+            mapState.lastY = touchY;
+            
+            redrawMap();
+        }
     } else if (e.touches.length === 2 && mapState.isPinching) {
         // Pinch to zoom
         const touch1 = e.touches[0];
@@ -676,20 +685,21 @@ function onTouchEnd(e) {
     
     if (e.touches.length === 0) {
         // Alle Finger weg
-        if (!mapState.isPinching && !mapState.isDragging) {
+        if (!mapState.isPinching && !mapState.hasDragged) {
             // War ein Tap - prüfe auf Tree-Click
             const touch = e.changedTouches[0];
             const rect = canvas.getBoundingClientRect();
             const touchX = touch.clientX - rect.left;
             const touchY = touch.clientY - rect.top;
             
-            const tree = findTreeAtPosition(touchX, touchY);
+            const tree = findTreeAtPosition(touchX, touchY, true);
             if (tree) {
                 scrollToTree(tree.id);
             }
         }
         
         mapState.isDragging = false;
+        mapState.hasDragged = false;
         mapState.isPinching = false;
         mapState.lastTouchDistance = 0;
     } else if (e.touches.length === 1) {
