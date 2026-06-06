@@ -247,8 +247,9 @@ function parseCSV(csvContent) {
     console.log('Anzahl Header:', headers.length);
     
     // Finde den Index der Baum-ID Spalte
+    // Unterstützt sowohl neues Format ('ID') als auch altes Format ('ID (z.B. "LRO-B-9")')
     const idHeaderIndex = headers.findIndex(h =>
-        h.includes('ID') && (h.includes('LRO') || h.includes('z.B'))
+        h === 'ID' || (h.includes('ID') && (h.includes('LRO') || h.includes('z.B')))
     );
     
     if (idHeaderIndex === -1) {
@@ -260,6 +261,52 @@ function parseCSV(csvContent) {
     const idHeader = headers[idHeaderIndex];
     console.log('Baum-ID Header gefunden:', idHeader, 'Index:', idHeaderIndex);
     
+    // Reverse mapping: CSV-Export-Header -> interne Feldnamen
+    const reverseMapping = {
+        'CreationDate': 'createdAt',
+        'UpdatedDate': 'updatedAt',
+        'ID': 'ID (z.B. "LRO-B-9")',
+        'Person': 'Name(n) der durchführenden Person(en)',
+        'Untersuchte Baumart': 'Untersuchte Baumart',
+        'Nachpflanzung': 'Nachpflanzung',
+        'Ergänzungen (Standort)': 'Ergänzungen (Standort)',
+        'Höhe in XXX cm': 'Höhe in XXX cm',
+        'Ergänzungen (Wuchshöhe)': 'Ergänzungen (Wuchshöhe)',
+        'Umfang in mm': 'Umfang in XXX mm (Standard)',
+        'Durchmesser in mm': 'Durchmesser in XXX mm (falls Umfang nicht möglich)',
+        'Ergänzungen (Umfang)': 'Ergänzungen (Umfang)',
+        'Trieblänge in XXX cm': 'Durchschnittliche Länge der einjährigen Triebe in XXX cm',
+        'Ergänzungen (Vitalität)': 'Ergänzungen (Vitalität)',
+        'Neigung': 'Neigung',
+        'Ästungshöhe in XXX cm': 'Ästungshöhe in XXX cm',
+        'Kronenansatz in XXX cm': 'Auf welcher Höhe befindet sich der erste Ast mit mehr als 3 cm Durchmesser? in XXX cm',
+        'Ergänzungen (Statik)': 'Ergänzungen (Statik)',
+        'Art des Gehölzschutzes': 'Art des Gehölzschutzes',
+        'andere - Art des Gehölzschutzes': 'andere - Art des Gehölzschutzes',
+        'Zustand des Gehölzschutzes': 'Zustand des Gehölzschutzes',
+        'Ist der Stamm geweißelt?': 'Ist der Stamm geweißelt?',
+        'Wie ist der Baum angebunden?': 'Wie ist der Baum angebunden?',
+        'Ergänzungen (Gehölzschutz)': 'Ergänzungen (Gehölzschutz)',
+        'Art des Managements': 'Art des Managements',
+        'andere - Art des Managements': 'andere - Art des Managements',
+        'Zustand der Baumscheibe': 'Zustand der Baumscheibe',
+        'weitere Makel - Zustand der Baumscheibe': 'weitere Makel - Zustand der Baumscheibe',
+        'Ergänzungen (Baumscheibe)': 'Ergänzungen (Baumscheibe)',
+        'Anzahl offener Schnittwunden': 'Anzahl offener Schnittwunden',
+        'Erfassung weiterer Schäden und Krankheiten': 'Erfassung weiterer Schäden und Krankheiten',
+        'weitere - Erfassung weiterer Schäden und Krankheiten': 'weitere - Erfassung weiterer Schäden und Krankheiten',
+        'Beschreibung der Schäden und Krankheiten': 'Beschreibung der Schäden und Krankheiten',
+        'Auffälligkeiten im Freifeld notieren': 'Auffälligkeiten im Freifeld notieren',
+        'Ergänzungen (Schäden)': 'Ergänzungen (Schäden)',
+        'Feedback zur App?': 'Feedback zur App?',
+        'x': 'x',
+        'y': 'y',
+        'Jahr': null, // wird ignoriert, da aus createdAt ableitbar
+        // Alte Header-Namen (Rückwärtskompatibilität)
+        'Erstellt am': 'createdAt',
+        'Zuletzt bearbeitet': 'updatedAt',
+    };
+
     // Parse rows
     const parsedTrees = [];
     for (let i = 1; i < lines.length; i++) {
@@ -270,30 +317,33 @@ function parseCSV(csvContent) {
         headers.forEach((header, index) => {
             let value = (values[index] || '').trim();
             
-            // Spezielle Behandlung für Datums-Felder
-            if (header === 'Erstellt am' || header === 'Zuletzt bearbeitet') {
-                // Datum im Format "DD.MM.YYYY, HH:MM" zu ISO konvertieren
-                if (value) {
-                    const parsed = parseDateString(value);
-                    if (header === 'Erstellt am') {
-                        tree.createdAt = parsed;
-                    } else {
-                        tree.updatedAt = parsed;
+            // Prüfe ob ein Reverse-Mapping existiert
+            if (header in reverseMapping) {
+                const internalKey = reverseMapping[header];
+                
+                // null bedeutet: Feld ignorieren (z.B. 'Jahr')
+                if (internalKey === null) return;
+                
+                // Datums-Felder: zu ISO konvertieren
+                if (internalKey === 'createdAt' || internalKey === 'updatedAt') {
+                    if (value) {
+                        tree[internalKey] = parseDateString(value);
                     }
+                } else {
+                    tree[internalKey] = value;
                 }
             } else {
+                // Unbekannter Header: direkt übernehmen (Rückwärtskompatibilität)
                 tree[header] = value;
             }
         });
         
-        // Verwende den gefundenen ID-Header
-        const baumId = tree[idHeader];
+        // Baum-ID immer unter dem internen Standard-Key suchen
+        const baumId = tree['ID (z.B. "LRO-B-9")'];
         console.log(`Zeile ${i}: Baum-ID = "${baumId}"`);
         
         // Nur hinzufügen wenn Baum-ID vorhanden
         if (baumId && baumId.trim()) {
-            // Stelle sicher dass die ID unter dem Standard-Key gespeichert ist
-            tree['ID (z.B. "LRO-B-9")'] = baumId;
             parsedTrees.push(tree);
         }
     }

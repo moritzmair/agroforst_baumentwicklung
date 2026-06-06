@@ -8,7 +8,7 @@ let mapState = {
     offsetY: 0,
     scale: 1,
     minScale: 0.5,
-    maxScale: 5,
+    maxScale: 20,
     isDragging: false,
     lastX: 0,
     lastY: 0,
@@ -170,42 +170,37 @@ function redrawMap() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Save context
-    ctx.save();
+    const TREE_RADIUS = 8;
+    const LABEL_OFFSET = TREE_RADIUS + 4;
     
-    // Apply transform
-    ctx.translate(mapState.offsetX, mapState.offsetY);
-    ctx.scale(mapState.scale, mapState.scale);
-    
-    // Draw trees
-    treePositions.forEach((pos, idx) => {
+    // Draw trees in screen space so size stays constant regardless of zoom
+    treePositions.forEach((pos) => {
         const { baseX, baseY, species, id } = pos;
         
-        // Draw tree point
+        // Convert base coordinates to screen coordinates
+        const screenX = baseX * mapState.scale + mapState.offsetX;
+        const screenY = baseY * mapState.scale + mapState.offsetY;
+        
+        // Draw tree circle (fixed size)
         ctx.beginPath();
-        ctx.arc(baseX, baseY, 12, 0, 2 * Math.PI);
+        ctx.arc(screenX, screenY, TREE_RADIUS, 0, 2 * Math.PI);
         ctx.fillStyle = getColorFromString(species);
         ctx.fill();
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
         
-        // ID Label wenn nur wenige Bäume oder wenn gezoomt
-        if (treePositions.length <= 10 || mapState.scale > 1.5) {
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(id, baseX, baseY - 16);
-        }
+        // ID Label – always shown, always same size
+        ctx.fillStyle = '#222';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(id, screenX, screenY - LABEL_OFFSET);
     });
     
-    // Restore context
-    ctx.restore();
-    
-    // Draw axes labels (nicht transformiert)
+    // Draw axes labels
     ctx.fillStyle = '#333';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
@@ -227,14 +222,16 @@ function screenToTree(screenX, screenY) {
 
 // Hit-Test: Finde angeklickten Baum
 function findTreeAtPosition(x, y) {
-    const treeCoords = screenToTree(x, y);
-    const hitRadius = 15 / mapState.scale; // Größerer Hit-Radius bei Zoom
+    const hitRadius = 12; // Fixed pixel hit radius matching drawn circle size
     
     for (let i = treePositions.length - 1; i >= 0; i--) {
         const pos = treePositions[i];
+        // Convert base coords to screen coords (same as drawing)
+        const screenX = pos.baseX * mapState.scale + mapState.offsetX;
+        const screenY = pos.baseY * mapState.scale + mapState.offsetY;
         const distance = Math.sqrt(
-            Math.pow(treeCoords.x - pos.baseX, 2) + 
-            Math.pow(treeCoords.y - pos.baseY, 2)
+            Math.pow(x - screenX, 2) +
+            Math.pow(y - screenY, 2)
         );
         
         if (distance <= hitRadius) {

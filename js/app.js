@@ -3,7 +3,7 @@ import { loadTreesFromStorage, updateSavedCount } from './storage.js';
 import { updateOnlineStatus, handleBaumIdInput } from './helpers.js';
 import { showWelcomeScreen, showFormScreen, showDataScreen, updateButtonLabels, backFromDataScreen } from './navigation.js';
 import { saveTree, resetForm, clearAllData } from './form.js';
-import { getGPSLocation } from './gps.js';
+import { getGPSLocation, requestLocationPermission } from './gps.js';
 import { exportToCSV, handleCSVImport } from './csv.js';
 import './help.js'; // Lädt Help-System
 
@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSavedCount();
     setupEventListeners();
     updateOnlineStatus();
+    
+    // Standortberechtigung proaktiv anfordern, damit iOS „Immer erlauben" anbietet
+    // und die Berechtigung nach App-Neustart nicht erneut abgefragt wird.
+    requestLocationPermission();
     
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);

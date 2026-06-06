@@ -8,7 +8,15 @@ import { exportToCSV } from './csv.js';
 export function saveTree(action) {
     const form = document.getElementById('treeForm');
     if (!form.checkValidity()) {
-        form.reportValidity();
+        // Erstes ungültiges Feld finden und dorthin scrollen
+        const firstInvalid = form.querySelector(':invalid');
+        if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Kurze Verzögerung damit der Scroll abgeschlossen ist, bevor der Browser-Tooltip erscheint
+            setTimeout(() => firstInvalid.reportValidity(), 300);
+        } else {
+            form.reportValidity();
+        }
         return;
     }
     
@@ -119,8 +127,8 @@ export function saveTree(action) {
     // LocalStorage Warnung
     checkStorageUsage();
     
-    // Backup-Reminder
-    if (trees.length % 50 === 0 && trees.length > 0) {
+    // Backup-Reminder (nur bei neuen Bäumen, nicht beim Bearbeiten)
+    if (editingTreeIndex === null && trees.length % 50 === 0 && trees.length > 0) {
         setTimeout(() => {
             if (confirm(`💾 Sie haben jetzt ${trees.length} Bäume erfasst!\n\nMöchten Sie jetzt ein Backup (CSV-Export) erstellen?`)) {
                 exportToCSV();
@@ -133,19 +141,6 @@ export function saveTree(action) {
     alert(`✓ Baum ${baumId} erfolgreich gespeichert!`);
     
     // Je nach Aktion unterschiedlich verhalten
-    const currentName = formData.get('name');
-    const currentBaumart = formData.get('baumart');
-    
-    // Gehölzschutz-Werte speichern
-    const currentSchutz = Array.from(formData.getAll('schutz'));
-    const currentSchutzZustand = formData.get('schutz_zustand');
-    const currentStammGeweisselt = formData.get('stamm_geweisselt');
-    const currentAnbindung = Array.from(formData.getAll('anbindung'));
-    
-    // Baumscheibe-Werte speichern
-    const currentManagement = Array.from(formData.getAll('management'));
-    const currentBaumscheibeZustand = Array.from(formData.getAll('baumscheibe_zustand'));
-    
     if (action === 'finish') {
         // Zurück zur Startseite
         showWelcomeScreen();
@@ -159,29 +154,9 @@ export function saveTree(action) {
             editTree(nextTreeIndex);
         } else {
             // Nächster Baum existiert noch nicht - neuen anlegen
+            // resetForm() bewahrt Vorauswahl-Felder automatisch
             resetForm();
-            document.getElementById('name').value = currentName;
-            document.getElementById('baumart').value = currentBaumart;
             document.getElementById('baumId').value = nextId;
-            
-            // Gehölzschutz wiederherstellen
-            document.querySelectorAll('input[name="schutz"]').forEach(cb => {
-                cb.checked = currentSchutz.includes(cb.value);
-            });
-            document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
-            document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
-            document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
-                cb.checked = currentAnbindung.includes(cb.value);
-            });
-            
-            // Baumscheibe wiederherstellen
-            document.querySelectorAll('input[name="management"]').forEach(cb => {
-                cb.checked = currentManagement.includes(cb.value);
-            });
-            document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
-                cb.checked = currentBaumscheibeZustand.includes(cb.value);
-            });
-            
             updateButtonLabels();
         }
     } else if (action === 'nextRow') {
@@ -194,29 +169,9 @@ export function saveTree(action) {
             editTree(nextTreeIndex);
         } else {
             // Baum in nächster Reihe existiert noch nicht - neuen anlegen
+            // resetForm() bewahrt Vorauswahl-Felder automatisch
             resetForm();
-            document.getElementById('name').value = currentName;
-            document.getElementById('baumart').value = currentBaumart;
             document.getElementById('baumId').value = nextId;
-            
-            // Gehölzschutz wiederherstellen
-            document.querySelectorAll('input[name="schutz"]').forEach(cb => {
-                cb.checked = currentSchutz.includes(cb.value);
-            });
-            document.getElementById('schutz_zustand').value = currentSchutzZustand || '';
-            document.getElementById('stamm_geweisselt').value = currentStammGeweisselt || '';
-            document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
-                cb.checked = currentAnbindung.includes(cb.value);
-            });
-            
-            // Baumscheibe wiederherstellen
-            document.querySelectorAll('input[name="management"]').forEach(cb => {
-                cb.checked = currentManagement.includes(cb.value);
-            });
-            document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
-                cb.checked = currentBaumscheibeZustand.includes(cb.value);
-            });
-            
             updateButtonLabels();
         }
     }
@@ -227,9 +182,38 @@ export function saveTree(action) {
 
 export function resetForm() {
     setEditingTreeIndex(null);
+    
+    // Vorauswahl-Felder vor dem Reset merken
+    const savedName = document.getElementById('name')?.value || '';
+    const savedBaumart = document.getElementById('baumart')?.value || '';
+    const savedSchutz = Array.from(document.querySelectorAll('input[name="schutz"]:checked')).map(cb => cb.value);
+    const savedSchutzZustand = document.getElementById('schutz_zustand')?.value || '';
+    const savedStammGeweisselt = document.getElementById('stamm_geweisselt')?.value || '';
+    const savedAnbindung = Array.from(document.querySelectorAll('input[name="anbindung"]:checked')).map(cb => cb.value);
+    const savedManagement = Array.from(document.querySelectorAll('input[name="management"]:checked')).map(cb => cb.value);
+    const savedBaumscheibeZustand = Array.from(document.querySelectorAll('input[name="baumscheibe_zustand"]:checked')).map(cb => cb.value);
+
     document.getElementById('treeForm').reset();
     document.getElementById('locationDisplay').classList.remove('active');
     
+    // Vorauswahl-Felder wiederherstellen
+    if (savedName) document.getElementById('name').value = savedName;
+    if (savedBaumart) document.getElementById('baumart').value = savedBaumart;
+    document.querySelectorAll('input[name="schutz"]').forEach(cb => {
+        cb.checked = savedSchutz.includes(cb.value);
+    });
+    if (savedSchutzZustand) document.getElementById('schutz_zustand').value = savedSchutzZustand;
+    if (savedStammGeweisselt) document.getElementById('stamm_geweisselt').value = savedStammGeweisselt;
+    document.querySelectorAll('input[name="anbindung"]').forEach(cb => {
+        cb.checked = savedAnbindung.includes(cb.value);
+    });
+    document.querySelectorAll('input[name="management"]').forEach(cb => {
+        cb.checked = savedManagement.includes(cb.value);
+    });
+    document.querySelectorAll('input[name="baumscheibe_zustand"]').forEach(cb => {
+        cb.checked = savedBaumscheibeZustand.includes(cb.value);
+    });
+
     // Umfang/Durchmesser Felder wieder aktivieren
     const umfangInput = document.getElementById('umfang');
     const durchmesserInput = document.getElementById('durchmesser');

@@ -430,6 +430,25 @@
                 <button id="importBtn" class="btn btn-secondary">📥 CSV Import</button>
                 <input type="file" id="importFileInput" accept=".csv" style="display:none;">
             </div>
+
+            <div class="data-search-sort">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="treeSearchInput" placeholder="Baum-ID, Baumart oder Person suchen…" autocomplete="off">
+                    <button id="clearSearchBtn" class="clear-search-btn" style="display:none;" title="Suche löschen">✕</button>
+                </div>
+                <div class="sort-controls">
+                    <label for="treeSortSelect">Sortierung:</label>
+                    <select id="treeSortSelect">
+                        <option value="id-asc">ID (A → Z)</option>
+                        <option value="id-desc">ID (Z → A)</option>
+                        <option value="date-desc">Datum (neueste zuerst)</option>
+                        <option value="date-asc">Datum (älteste zuerst)</option>
+                        <option value="species-asc">Baumart (A → Z)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="searchResultInfo" class="search-result-info" style="display:none;"></div>
             
             <div id="treeMap" class="tree-map-container">
                 <h3>Positionskarte</h3>
