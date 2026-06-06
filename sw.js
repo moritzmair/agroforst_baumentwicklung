@@ -1,4 +1,6 @@
-const CACHE_NAME = 'baumentwicklung-v9';
+const APP_VERSION = 'v9';
+const APP_DATE = '06.06.2026';
+const CACHE_NAME = `baumentwicklung-${APP_VERSION}`;
 const urlsToCache = [
     './',
     './index.html',
@@ -43,6 +45,13 @@ self.addEventListener('fetch', event => {
                 return fetch(event.request);
             })
     );
+});
+
+// Respond to version queries from the main app
+self.addEventListener('message', event => {
+    if (event.data === 'GET_VERSION') {
+        event.source.postMessage({ version: APP_VERSION, date: APP_DATE });
+    }
 });
 
 // Update Service Worker

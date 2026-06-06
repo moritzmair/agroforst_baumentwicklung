@@ -892,3 +892,26 @@ input[type="file"] {
         font-size: 1.1rem;
     }
 }
+/* App Footer */
+.app-footer {
+    text-align: center;
+    padding: 1rem;
+    margin-top: 2rem;
+    color: #888;
+    font-size: 0.8rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer-divider {
+    margin: 0 0.5rem;
+    color: #ccc;
+}
+
+.footer-link {
+    color: #888;
+    text-decoration: underline;
+}
+
+.footer-link:hover {
+    color: #2e7d32;
+}

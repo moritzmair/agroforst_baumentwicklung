@@ -100,11 +100,49 @@ function setupEventListeners() {
     });
 }
 
-// Service Worker Registration
+// Service Worker Registration + Version Info
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker registered'))
+            .then(reg => {
+                console.log('Service Worker registered');
+                // Warte bis ein aktiver SW vorhanden ist
+                const sw = reg.active || reg.installing || reg.waiting;
+                if (sw) {
+                    requestVersionFromSW(sw);
+                }
+                // Falls der SW noch nicht aktiv ist, warte auf Aktivierung
+                reg.addEventListener('updatefound', () => {
+                    const newSW = reg.installing;
+                    newSW.addEventListener('statechange', () => {
+                        if (newSW.state === 'activated') {
+                            requestVersionFromSW(newSW);
+                        }
+                    });
+                });
+            })
             .catch(err => console.log('Service Worker registration failed'));
+
+        // Empfange Antwort vom SW
+        navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data && event.data.version) {
+                const versionEl = document.getElementById('appVersion');
+                const standEl = document.getElementById('appStand');
+                if (versionEl) versionEl.textContent = `Version ${event.data.version}`;
+                if (standEl) standEl.textContent = `Stand: ${event.data.date}`;
+            }
+        });
     });
+}
+
+function requestVersionFromSW(sw) {
+    if (sw.state === 'activated') {
+        sw.postMessage('GET_VERSION');
+    } else {
+        sw.addEventListener('statechange', () => {
+            if (sw.state === 'activated') {
+                sw.postMessage('GET_VERSION');
+            }
+        });
+    }
 }
