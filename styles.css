@@ -989,8 +989,12 @@ input[type="file"] {
     }
 
     .tree-map-container {
-        padding: 0.75rem;
-        margin-bottom: 1rem;
+        padding: 0.375rem;
+        margin-bottom: 0.75rem;
+    }
+
+    #treeMapCanvas {
+        height: 360px;
     }
 
     .map-legend {

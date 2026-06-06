@@ -206,10 +206,10 @@ export function drawTreeMap() {
     ctx = canvas.getContext('2d');
     const legend = document.getElementById('mapLegend');
     
-    // Set canvas size - ensure minimum width
+    // Set canvas resolution to match its actual rendered size (CSS may differ per breakpoint)
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(rect.width, 300);
-    canvas.height = 400;
+    canvas.height = Math.max(rect.height, 200);
     
     // Event-Listeners nur einmal hinzufügen
     if (!canvas.dataset.listenersAdded) {
