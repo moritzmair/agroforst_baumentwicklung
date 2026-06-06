@@ -201,10 +201,14 @@ function fetchVisibleTiles() {
 
 // ── Haupt-Zeichenfunktionen ───────────────────────────────────────────────────
 
-export function drawTreeMap() {
+export function drawTreeMap(filteredTrees = null) {
     canvas = document.getElementById('treeMapCanvas');
     ctx = canvas.getContext('2d');
     const legend = document.getElementById('mapLegend');
+
+    // Welche Bäume sollen angezeigt werden?
+    // filteredTrees = null → alle Bäume aus state; sonst nur die gefilterten
+    const sourceTrees = filteredTrees !== null ? filteredTrees : trees;
     
     // Set canvas resolution to match its actual rendered size (CSS may differ per breakpoint)
     const rect = canvas.getBoundingClientRect();
@@ -226,17 +230,20 @@ export function drawTreeMap() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Show all trees if no GPS coordinates
-    if (trees.length === 0) {
+    if (sourceTrees.length === 0) {
         ctx.fillStyle = '#757575';
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Noch keine Bäume gespeichert', canvas.width / 2, canvas.height / 2);
+        ctx.fillText(
+            filteredTrees !== null ? 'Keine Bäume entsprechen dem Filter' : 'Noch keine Bäume gespeichert',
+            canvas.width / 2, canvas.height / 2
+        );
         legend.innerHTML = '';
         return;
     }
     
     // Filter trees with valid coordinates
-    const validTrees = trees.filter(tree => {
+    const validTrees = sourceTrees.filter(tree => {
         const lat = parseFloat(tree.y);
         const lon = parseFloat(tree.x);
         return !isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0;
@@ -247,11 +254,11 @@ export function drawTreeMap() {
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Keine Bäume mit GPS-Positionen vorhanden', canvas.width / 2, canvas.height / 2);
-        ctx.fillText(`(${trees.length} Bäume ohne GPS-Daten)`, canvas.width / 2, canvas.height / 2 + 25);
+        ctx.fillText(`(${sourceTrees.length} Bäume ohne GPS-Daten)`, canvas.width / 2, canvas.height / 2 + 25);
         
-        // Show legend for all trees anyway
+        // Show legend for source trees
         const speciesCounts = {};
-        trees.forEach(tree => {
+        sourceTrees.forEach(tree => {
             const species = tree['Untersuchte Baumart'] || 'Unbekannt';
             speciesCounts[species] = (speciesCounts[species] || 0) + 1;
         });

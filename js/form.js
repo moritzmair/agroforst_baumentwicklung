@@ -150,7 +150,7 @@ export function saveTree(action) {
     // Backup-Reminder (nur bei neuen Bäumen, nicht beim Bearbeiten)
     if (editingTreeIndex === null && trees.length % 50 === 0 && trees.length > 0) {
         setTimeout(() => {
-            if (confirm(`💾 Sie haben jetzt ${trees.length} Bäume erfasst!\n\nMöchten Sie jetzt ein Backup (CSV-Export) erstellen?`)) {
+            if (confirm(`💾 Du hast jetzt ${trees.length} Bäume erfasst!\n\nMöchtest du jetzt ein Backup (CSV-Export) erstellen?`)) {
                 exportToCSV();
             }
         }, 500);

@@ -45,7 +45,7 @@ export function getGPSLocation() {
     const display = document.getElementById('locationDisplay');
     
     if (!navigator.geolocation) {
-        showGPSError('❌ GPS wird von diesem Gerät/Browser nicht unterstützt.\n\nBitte verwenden Sie ein Gerät mit GPS-Funktion oder geben Sie die Koordinaten manuell ein.');
+        showGPSError('❌ GPS wird von diesem Gerät/Browser nicht unterstützt.\n\nBitte verwende ein Gerät mit GPS-Funktion oder gib die Koordinaten manuell ein.');
         return;
     }
     
@@ -91,7 +91,7 @@ function handleGPSError(error, display) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
             errorMessage = '🚫 GPS-Zugriff wurde verweigert';
-            errorDetails = 'Bitte erlauben Sie in den Geräte- bzw. Browser-Einstellungen den Zugriff auf Ihren Standort.\n\n';
+            errorDetails = 'Bitte erlaube in den Geräte- bzw. Browser-Einstellungen den Zugriff auf deinen Standort.\n\n';
             errorDetails += '📱 iOS Safari: Einstellungen → Safari → Standort → "Beim Verwenden der App erlauben"\n';
             errorDetails += '🤖 Android Chrome: Einstellungen → Website-Einstellungen → Standort → Erlauben';
             break;
@@ -101,18 +101,18 @@ function handleGPSError(error, display) {
             errorDetails = 'Das GPS-Signal kann nicht empfangen werden.\n\n';
             errorDetails += 'Mögliche Ursachen:\n';
             errorDetails += '• GPS ist am Gerät deaktiviert\n';
-            errorDetails += '• Sie befinden sich in einem Gebäude oder Tunnel\n';
+            errorDetails += '• Du befindest dich in einem Gebäude oder Tunnel\n';
             errorDetails += '• Schlechter Satellitenempfang\n\n';
-            errorDetails += 'Bitte versuchen Sie es im Freien erneut oder aktivieren Sie GPS in den Geräteeinstellungen.';
+            errorDetails += 'Bitte versuche es im Freien erneut oder aktiviere GPS in den Geräteeinstellungen.';
             break;
             
         case error.TIMEOUT:
             errorMessage = '⏱️ GPS-Timeout';
             errorDetails = 'Die GPS-Position konnte nicht innerhalb der vorgegebenen Zeit ermittelt werden.\n\n';
             errorDetails += 'Tipps:\n';
-            errorDetails += '• Bewegen Sie sich ins Freie\n';
-            errorDetails += '• Warten Sie einen Moment und versuchen Sie es erneut\n';
-            errorDetails += '• Stellen Sie sicher, dass GPS aktiviert ist';
+            errorDetails += '• Bewege dich ins Freie\n';
+            errorDetails += '• Warte einen Moment und versuche es erneut\n';
+            errorDetails += '• Stelle sicher, dass GPS aktiviert ist';
             break;
             
         default:

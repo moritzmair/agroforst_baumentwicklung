@@ -6,7 +6,7 @@ export function saveTreesToStorage() {
         localStorage.setItem('baumentwicklung_trees', JSON.stringify(trees));
     } catch (e) {
         if (e.name === 'QuotaExceededError') {
-            alert('⚠️ Speicher ist voll! Bitte exportieren Sie Ihre Daten als CSV und löschen Sie alte Einträge.');
+            alert('⚠️ Speicher ist voll! Bitte exportiere deine Daten als CSV und lösche alte Einträge.');
         } else {
             alert('Fehler beim Speichern: ' + e.message);
         }
@@ -27,7 +27,7 @@ export function checkStorageUsage() {
         const usagePercent = (totalSize / maxSize) * 100;
         
         if (usagePercent > 80) {
-            alert(`⚠️ Speicherwarnung: ${usagePercent.toFixed(0)}% des Speichers belegt.\n\nBitte erstellen Sie bald ein CSV-Backup und löschen Sie alte Einträge.`);
+            alert(`⚠️ Speicherwarnung: ${usagePercent.toFixed(0)}% des Speichers belegt.\n\nBitte erstelle bald ein CSV-Backup und lösche alte Einträge.`);
         }
     } catch (e) {
         console.error('Fehler bei Speicherprüfung:', e);

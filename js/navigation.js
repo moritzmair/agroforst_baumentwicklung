@@ -123,32 +123,27 @@ function renderDataList(searchTerm = '', sortKey = 'id-asc') {
 
         return `
             <div class="data-group${isDuplicate ? ' duplicate-group' : ''}">
-                <h3 class="data-group-header">${id}${isDuplicate ? ` <span style="color:#f44336;font-size:0.9em;">(${grpEntries.length}x erfasst)</span>` : ''}</h3>
+                <h3 class="data-group-header">
+                    <span class="data-group-header-id">${id}${isDuplicate ? ` <span style="color:#ffcdd2;font-size:0.9em;">(${grpEntries.length}x erfasst)</span>` : ` <span class="data-group-header-species">${grpEntries[0].tree['Untersuchte Baumart']}</span>`}</span>
+                    ${grpEntries.length === 1 ? `
+                    <span class="data-group-header-actions">
+                        <button class="btn-icon btn-icon-edit" onclick="window.editTree(${grpEntries[0].index})" title="Bearbeiten" aria-label="Bearbeiten">✏️</button>
+                        <button class="btn-icon btn-icon-delete" onclick="window.deleteTree(${grpEntries[0].index})" title="Löschen" aria-label="Löschen">🗑️</button>
+                    </span>` : ''}
+                </h3>
                 <div class="data-group-items">
                     ${grpEntries.map(({ tree, index }) => {
-                        const currentId   = tree['ID (z.B. "LRO-B-9")'];
-                        const nextTreeId  = incrementTreeId(currentId);
-                        const nextRowId   = incrementRowId(currentId);
-                        const nextTreeExists = treeExists(nextTreeId);
-                        const nextRowExists  = treeExists(nextRowId);
-
-                        const nextTreeLabel = nextTreeExists ? '✏️ Nächsten bearbeiten' : '➡️ Nächsten anlegen';
-                        const nextRowLabel  = nextRowExists  ? '✏️ Nächste Reihe bearbeiten' : '⏩ Nächste Reihe anlegen';
-
                         return `
                         <div class="data-item${isDuplicate ? ' duplicate-item' : ''}">
-                            <p><strong>Baumart:</strong> ${tree['Untersuchte Baumart']}</p>
                             <p><strong>Erfasst:</strong> ${formatDate(tree.createdAt)}</p>
-                            <p><strong>Bearbeitet:</strong> ${formatDate(tree.updatedAt)}</p>
                             <p><strong>Höhe:</strong> ${tree['Höhe in XXX cm']} cm</p>
-                            <p><strong>Position:</strong> ${tree.y && tree.x && parseFloat(tree.y) !== 0 ? `${tree.y}, ${tree.x}` : 'Keine GPS-Daten'}</p>
+                            <p><strong>Bearbeitet:</strong> ${formatDate(tree.updatedAt)}</p>
                             <p><strong>Person:</strong> ${tree['Name(n) der durchführenden Person(en)']}</p>
+                            ${isDuplicate ? `
                             <div class="data-item-actions">
                                 <button class="btn btn-primary" onclick="window.editTree(${index})">✏️ Bearbeiten</button>
-                                <button class="btn btn-primary" onclick="window.nextTreeInRow(${index})">${nextTreeLabel}</button>
-                                <button class="btn btn-primary" onclick="window.nextTreeInNextRow(${index})">${nextRowLabel}</button>
                                 <button class="btn btn-secondary" onclick="window.deleteTree(${index})">🗑️ Löschen</button>
-                            </div>
+                            </div>` : ''}
                         </div>
                     `;
                     }).join('')}
@@ -171,7 +166,16 @@ function initSearchSort() {
     const sortSelect    = document.getElementById('treeSortSelect');
 
     function refresh() {
-        renderDataList(searchInput.value.trim(), sortSelect.value);
+        const searchTerm = searchInput.value.trim();
+        const sortKey    = sortSelect.value;
+        renderDataList(searchTerm, sortKey);
+
+        // Karte mit denselben gefilterten Bäumen neu zeichnen
+        if (trees.length > 0) {
+            const filteredEntries = getSortedFilteredTrees(searchTerm, sortKey);
+            const filteredTrees   = filteredEntries.map(e => e.tree);
+            drawTreeMap(filteredTrees);
+        }
     }
 
     searchInput.addEventListener('input', () => {
@@ -213,11 +217,18 @@ export function showDataScreen() {
     // Aktuelle Suche/Sortierung auslesen und Liste rendern
     const searchInput = document.getElementById('treeSearchInput');
     const sortSelect  = document.getElementById('treeSortSelect');
-    renderDataList(searchInput.value.trim(), sortSelect.value);
+    const searchTerm  = searchInput.value.trim();
+    const sortKey     = sortSelect.value;
+    renderDataList(searchTerm, sortKey);
 
     // Canvas nach Screen-Wechsel neu zeichnen für korrekte Größe
+    // Dabei denselben Filter wie die Liste verwenden
     if (trees.length > 0) {
-        setTimeout(() => drawTreeMap(), 100);
+        setTimeout(() => {
+            const filteredEntries = getSortedFilteredTrees(searchTerm, sortKey);
+            const filteredTrees   = filteredEntries.map(e => e.tree);
+            drawTreeMap(filteredTrees);
+        }, 100);
     }
     
     window.scrollTo(0, 0);

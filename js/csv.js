@@ -161,7 +161,7 @@ export function exportToCSV() {
     link.click();
     document.body.removeChild(link);
     
-    alert(`✓ CSV-Export erfolgreich (${trees.length} Bäume)\n\n📤 Nächster Schritt:\nLaden Sie die CSV-Datei im Uploadbereich Ihrer Lokalgruppe hoch.`);
+    alert(`✓ CSV-Export erfolgreich (${trees.length} Bäume)\n\n📤 Nächster Schritt:\nLade die CSV-Datei im Uploadbereich deiner Lokalgruppe hoch.`);
 }
 
 export function handleCSVImport(e) {
@@ -254,7 +254,7 @@ function parseCSV(csvContent) {
     
     if (idHeaderIndex === -1) {
         console.error('Baum-ID Header nicht gefunden. Verfügbare Header:', headers);
-        alert('❌ Fehler: Baum-ID Spalte in CSV nicht gefunden. Bitte überprüfen Sie das Dateiformat.');
+        alert('❌ Fehler: Baum-ID Spalte in CSV nicht gefunden. Bitte überprüfe das Dateiformat.');
         return [];
     }
     
