@@ -452,7 +452,10 @@
             
             <div id="treeMap" class="tree-map-container">
                 <h3>Positionskarte</h3>
-                <canvas id="treeMapCanvas"></canvas>
+                <div class="map-canvas-wrapper">
+                    <canvas id="treeMapCanvas"></canvas>
+                    <a id="osmAttribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="osm-attribution" style="display:none;">© OpenStreetMap contributors</a>
+                </div>
                 <div id="mapLegend" class="map-legend"></div>
             </div>
             <div id="dataList"></div>

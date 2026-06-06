@@ -10,6 +10,8 @@ let mapState = {
     minScale: 0.5,
     maxScale: 20,
     isDragging: false,
+    mouseDown: false,
+    hasDragged: false,
     lastX: 0,
     lastY: 0,
     // Touch-spezifisch
@@ -23,6 +25,181 @@ let treePositions = [];
 // Canvas-Referenz
 let canvas = null;
 let ctx = null;
+
+// OSM Tile Cache: key → Promise<HTMLImageElement>
+const tileCache = new Map();
+// Resolved image cache: key → HTMLImageElement (for synchronous drawing)
+const tileImgCache = new Map();
+let osmEnabled = false;
+// Letzter verwendeter Tile-Zoom-Level – bei Wechsel werden Caches geleert
+let lastTileZoom = -1;
+
+// Geo-Bounds der aktuellen Bäume
+let geoBounds = null;
+
+// ── Web Mercator Helpers ──────────────────────────────────────────────────────
+// OSM tiles use Web Mercator (EPSG:3857). We must use the same projection
+// for tree positions so they align perfectly with the tile background.
+
+// Latitude → Mercator Y (normalised, same unit as longitude)
+function latToMercY(lat) {
+    const rad = lat * Math.PI / 180;
+    return Math.log(Math.tan(Math.PI / 4 + rad / 2)) * (180 / Math.PI);
+}
+
+// ── OSM Tile Helpers ──────────────────────────────────────────────────────────
+
+function lon2tile(lon, zoom) {
+    return Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+}
+
+function lat2tile(lat, zoom) {
+    return Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+}
+
+// Tile-Koordinate → Geo-Koordinate (NW-Ecke des Tiles)
+function tile2lon(x, zoom) {
+    return x / Math.pow(2, zoom) * 360 - 180;
+}
+
+function tile2lat(y, zoom) {
+    const n = Math.PI - 2 * Math.PI * y / Math.pow(2, zoom);
+    return 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+}
+
+// Geo → Canvas-Pixel (Basis-Koordinaten, ohne mapState-Transform)
+// Uses Web Mercator so the projection matches OSM tiles exactly.
+function geoToBase(lat, lon) {
+    if (!geoBounds) return { x: 0, y: 0 };
+    const { centerMercY, centerLon, scale } = geoBounds;
+    const mercY = latToMercY(lat);
+    return {
+        x: canvas.width / 2 + (lon - centerLon) * scale,
+        y: canvas.height / 2 - (mercY - centerMercY) * scale
+    };
+}
+
+// Wähle den OSM-Zoom-Level basierend auf dem aktuellen Canvas-Maßstab.
+// Ein OSM-Tile ist 256×256 px. Bei Zoom z deckt die gesamte Welt 256×2^z Pixel ab.
+// Wir wählen den Zoom so, dass ein Tile ungefähr seiner nativen Auflösung entspricht.
+function chooseTileZoom() {
+    if (!geoBounds) return 16;
+    const TILE_SIZE = 256;
+    // Wie viele Längengrad-Einheiten sind aktuell auf dem Canvas sichtbar?
+    const visibleLonRange = canvas.width / (geoBounds.scale * mapState.scale);
+    // zoom = log2((canvas.width / TILE_SIZE) × (360 / visibleLonRange))
+    // +1 damit Tiles immer eine Stufe schärfer als nötig geladen werden
+    const zoom = Math.floor(Math.log2((canvas.width / TILE_SIZE) * (360 / visibleLonRange))) + 1;
+    // Clamp: min 1, max 19 (OSM-Limit)
+    return Math.max(1, Math.min(19, zoom));
+}
+
+// Lade ein einzelnes OSM-Tile; speichert das Bild nach dem Laden auch in tileImgCache
+function loadTile(x, y, zoom) {
+    const key = `${zoom}/${x}/${y}`;
+    if (tileCache.has(key)) return tileCache.get(key);
+
+    const promise = new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        // Verteile Requests auf a/b/c Subdomains
+        const sub = ['a', 'b', 'c'][(x + y) % 3];
+        img.src = `https://${sub}.tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+        img.onload = () => {
+            tileImgCache.set(key, img); // sofort synchron verfügbar
+            resolve(img);
+            // Neu zeichnen sobald ein Tile geladen ist
+            redrawMap();
+        };
+        img.onerror = () => resolve(null);
+    });
+
+    tileCache.set(key, promise);
+    return promise;
+}
+
+// Zeichne alle im tileImgCache vorhandenen Tiles für den aktuellen Viewport synchron
+function drawCachedTiles() {
+    if (!osmEnabled || !geoBounds || !canvas || !ctx) return;
+
+    const zoom = chooseTileZoom();
+    const topLeft     = screenToGeo(0, 0);
+    const bottomRight = screenToGeo(canvas.width, canvas.height);
+
+    const tileMinX = lon2tile(topLeft.lon, zoom)     - 1;
+    const tileMaxX = lon2tile(bottomRight.lon, zoom) + 1;
+    const tileMinY = lat2tile(topLeft.lat, zoom)     - 1;
+    const tileMaxY = lat2tile(bottomRight.lat, zoom) + 1;
+
+    for (let tx = tileMinX; tx <= tileMaxX; tx++) {
+        for (let ty = tileMinY; ty <= tileMaxY; ty++) {
+            const key = `${zoom}/${tx}/${ty}`;
+            const img = tileImgCache.get(key);
+            if (!img) continue;
+
+            const nwLat = tile2lat(ty, zoom);
+            const nwLon = tile2lon(tx, zoom);
+            const seLat = tile2lat(ty + 1, zoom);
+            const seLon = tile2lon(tx + 1, zoom);
+
+            const nw = geoToBase(nwLat, nwLon);
+            const se = geoToBase(seLat, seLon);
+
+            const screenX = nw.x * mapState.scale + mapState.offsetX;
+            const screenY = nw.y * mapState.scale + mapState.offsetY;
+            const screenW = (se.x - nw.x) * mapState.scale;
+            const screenH = (se.y - nw.y) * mapState.scale;
+
+            ctx.drawImage(img, screenX, screenY, screenW, screenH);
+        }
+    }
+}
+
+// Konvertiere Canvas-Screenkoordinaten zurück in Geo-Koordinaten (Längengrad, Mercator-Y)
+function screenToGeo(screenX, screenY) {
+    const { centerLon, centerMercY, scale } = geoBounds;
+    const baseX = (screenX - mapState.offsetX) / mapState.scale;
+    const baseY = (screenY - mapState.offsetY) / mapState.scale;
+    const lon    = centerLon   + (baseX - canvas.width  / 2) / scale;
+    const mercY  = centerMercY - (baseY - canvas.height / 2) / scale;
+    // Mercator-Y → Latitude
+    const lat = 2 * Math.atan(Math.exp(mercY * Math.PI / 180)) * 180 / Math.PI - 90;
+    return { lat, lon };
+}
+
+// Starte Tile-Requests für den aktuellen Viewport (ohne auf Ergebnis zu warten)
+function fetchVisibleTiles() {
+    if (!osmEnabled || !geoBounds || !canvas) return;
+
+    const zoom = chooseTileZoom();
+
+    // Zoom-Level hat sich geändert → alte Tiles aus dem Speicher entfernen
+    // damit drawCachedTiles() keine veralteten, unscharfen Tiles zeichnet
+    if (zoom !== lastTileZoom) {
+        tileCache.clear();
+        tileImgCache.clear();
+        lastTileZoom = zoom;
+    }
+
+    const topLeft     = screenToGeo(0, 0);
+    const bottomRight = screenToGeo(canvas.width, canvas.height);
+
+    const tileMinX = lon2tile(topLeft.lon, zoom)     - 1;
+    const tileMaxX = lon2tile(bottomRight.lon, zoom) + 1;
+    const tileMinY = lat2tile(topLeft.lat, zoom)     - 1;
+    const tileMaxY = lat2tile(bottomRight.lat, zoom) + 1;
+
+    // Sicherheits-Limit
+    if ((tileMaxX - tileMinX + 1) > 10 || (tileMaxY - tileMinY + 1) > 10) return;
+
+    for (let tx = tileMinX; tx <= tileMaxX; tx++) {
+        for (let ty = tileMinY; ty <= tileMaxY; ty++) {
+            loadTile(tx, ty, zoom); // startet Download; onload ruft redrawMap() auf
+        }
+    }
+}
+
+// ── Haupt-Zeichenfunktionen ───────────────────────────────────────────────────
 
 export function drawTreeMap() {
     canvas = document.getElementById('treeMapCanvas');
@@ -94,6 +271,9 @@ export function drawTreeMap() {
     
     // Berechne Bounds und speichere Tree-Daten
     prepareTreeData(validTrees);
+
+    // Online-Status prüfen und OSM-Tiles laden
+    osmEnabled = navigator.onLine;
     
     // Count trees by species
     const speciesCounts = {};
@@ -102,11 +282,11 @@ export function drawTreeMap() {
         speciesCounts[species] = (speciesCounts[species] || 0) + 1;
     });
     
-    // Draw map
+    // Draw map (mit oder ohne OSM-Tiles)
     redrawMap();
     
     // Create legend
-    legend.innerHTML = '<p style="margin-bottom:0.5rem;font-weight:500;">🖱️ Klicke Bäume an | Verschieben & Zoomen</p>' +
+    legend.innerHTML = `<p style="margin-bottom:0.5rem;font-weight:500;">🖱️ Klicke Bäume an | Verschieben & Zoomen</p>` +
         Object.entries(speciesCounts)
         .sort((a, b) => b[1] - a[1])
         .map(([species, count]) => `
@@ -119,57 +299,81 @@ export function drawTreeMap() {
 }
 
 function prepareTreeData(validTrees) {
-    // Find bounds
+    // Find geographic bounds
     const lats = validTrees.map(t => parseFloat(t.y));
     const lons = validTrees.map(t => parseFloat(t.x));
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
     const minLon = Math.min(...lons);
     const maxLon = Math.max(...lons);
-    
-    // Add padding
+
+    // Convert latitudes to Web Mercator Y (same unit as longitude degrees)
+    // This ensures the canvas projection matches OSM tiles exactly.
+    const minMercY = latToMercY(minLat);
+    const maxMercY = latToMercY(maxLat);
+
+    const lonRange  = maxLon  - minLon  || 0.001;
+    const mercYRange = maxMercY - minMercY || 0.001;
+
+    // Scale so the larger extent fits within the canvas with padding
     const padding = 40;
-    const latRange = maxLat - minLat || 0.001;
-    const lonRange = maxLon - minLon || 0.001;
-    
-    // Beide Achsen gleich skalieren
-    const maxRange = Math.max(latRange, lonRange);
     const scale = Math.min(
-        (canvas.width - 2 * padding) / maxRange,
-        (canvas.height - 2 * padding) / maxRange
+        (canvas.width  - 2 * padding) / lonRange,
+        (canvas.height - 2 * padding) / mercYRange
     );
-    
-    // Zentriere die Karte
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLon = (minLon + maxLon) / 2;
-    
+
+    // Centre of the view in Mercator space
+    const centerLon   = (minLon  + maxLon)  / 2;
+    const centerMercY = (minMercY + maxMercY) / 2;
+
+    // Speichere Geo-Bounds für OSM-Tiles und geoToBase()
+    geoBounds = {
+        minLat, maxLat, minLon, maxLon,
+        minMercY, maxMercY,
+        lonRange, mercYRange,
+        centerLon, centerMercY,
+        scale
+    };
+
     // Speichere Tree-Positionen für Hit-Detection
+    // Use geoToBase() so tree positions use the same Mercator math as tile drawing.
     treePositions = validTrees.map(tree => {
-        const lat = parseFloat(tree.y);
-        const lon = parseFloat(tree.x);
+        const lat     = parseFloat(tree.y);
+        const lon     = parseFloat(tree.x);
         const species = tree['Untersuchte Baumart'] || 'Unbekannt';
-        const id = tree['ID (z.B. "LRO-B-9")'];
-        
-        // Basis-Koordinaten (ohne Transform)
-        const baseX = canvas.width / 2 + (lon - centerLon) * scale;
-        const baseY = canvas.height / 2 - (lat - centerLat) * scale;
-        
-        return {
-            baseX,
-            baseY,
-            species,
-            id,
-            tree
-        };
+        const id      = tree['ID (z.B. "LRO-B-9")'];
+
+        const { x: baseX, y: baseY } = geoToBase(lat, lon);
+
+        return { baseX, baseY, species, id, tree };
     });
 }
 
+// Debounce-Timer für neue Tile-Requests
+let tileDebounceTimer = null;
+
 function redrawMap() {
     if (!canvas || !ctx) return;
-    
-    // Clear canvas
+
+    // 1. Canvas leeren
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
+    if (osmEnabled) {
+        // 2. Bereits geladene Tiles sofort synchron zeichnen (kein Flackern)
+        drawCachedTiles();
+
+        // 3. Fehlende Tiles mit Debounce nachladen
+        clearTimeout(tileDebounceTimer);
+        tileDebounceTimer = setTimeout(fetchVisibleTiles, 120);
+    }
+
+    // 4. Bäume immer oben drauf zeichnen
+    drawTrees();
+}
+
+function drawTrees() {
+    if (!canvas || !ctx) return;
+
     const TREE_RADIUS = 8;
     const LABEL_OFFSET = TREE_RADIUS + 4;
     
@@ -194,22 +398,32 @@ function redrawMap() {
         ctx.stroke();
         
         // ID Label – always shown, always same size
-        ctx.fillStyle = '#222';
+        // Weißer Halo für bessere Lesbarkeit auf Kartenhintergrund
         ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(id, screenX, screenY - LABEL_OFFSET);
+        ctx.fillStyle = '#222';
         ctx.fillText(id, screenX, screenY - LABEL_OFFSET);
     });
     
-    // Draw axes labels
-    ctx.fillStyle = '#333';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('West ← → Ost', canvas.width / 2, canvas.height - 10);
-    ctx.save();
-    ctx.translate(15, canvas.height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Süd ← → Nord', 0, 0);
-    ctx.restore();
+    // OSM-Attribution HTML-Link ein-/ausblenden
+    const osmAttr = document.getElementById('osmAttribution');
+    if (osmAttr) osmAttr.style.display = osmEnabled ? 'block' : 'none';
+
+    if (!osmEnabled) {
+        // Achsenbeschriftung nur ohne OSM-Tiles (wäre auf Karte störend)
+        ctx.fillStyle = '#333';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('West ← → Ost', canvas.width / 2, canvas.height - 10);
+        ctx.save();
+        ctx.translate(15, canvas.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Süd ← → Nord', 0, 0);
+        ctx.restore();
+    }
 }
 
 // Transform canvas coordinates to tree space
@@ -281,45 +495,67 @@ function setupEventListeners() {
     
     // Cursor-Style
     canvas.style.cursor = 'grab';
+
+    // Online/Offline-Wechsel → Karte neu zeichnen
+    window.addEventListener('online', () => {
+        osmEnabled = true;
+        tileCache.clear(); // Alten Cache leeren
+        redrawMap();
+    });
+    window.addEventListener('offline', () => {
+        osmEnabled = false;
+        redrawMap();
+    });
 }
 
 // Maus-Events
 function onMouseDown(e) {
-    mapState.isDragging = true;
+    mapState.isDragging = false; // wird erst bei tatsächlicher Bewegung gesetzt
+    mapState.hasDragged = false;
     mapState.lastX = e.offsetX;
     mapState.lastY = e.offsetY;
+    mapState.mouseDown = true;
     canvas.style.cursor = 'grabbing';
 }
 
 function onMouseMove(e) {
-    if (!mapState.isDragging) {
+    if (!mapState.mouseDown) {
         // Check if over tree for cursor change
         const tree = findTreeAtPosition(e.offsetX, e.offsetY);
         canvas.style.cursor = tree ? 'pointer' : 'grab';
         return;
     }
-    
+
     const deltaX = e.offsetX - mapState.lastX;
     const deltaY = e.offsetY - mapState.lastY;
-    
-    mapState.offsetX += deltaX;
-    mapState.offsetY += deltaY;
-    
-    mapState.lastX = e.offsetX;
-    mapState.lastY = e.offsetY;
-    
-    redrawMap();
+
+    // Erst ab 3px Bewegung als Drag werten
+    if (!mapState.isDragging && Math.abs(deltaX) + Math.abs(deltaY) > 3) {
+        mapState.isDragging = true;
+        mapState.hasDragged = true;
+    }
+
+    if (mapState.isDragging) {
+        mapState.offsetX += deltaX;
+        mapState.offsetY += deltaY;
+        mapState.lastX = e.offsetX;
+        mapState.lastY = e.offsetY;
+        redrawMap();
+    }
 }
 
 function onMouseUp() {
+    mapState.mouseDown = false;
     mapState.isDragging = false;
     canvas.style.cursor = 'grab';
 }
 
 function onClick(e) {
-    // Nur wenn nicht gedraggt wurde
-    if (mapState.isDragging) return;
-    
+    // Nur auslösen wenn nicht gedraggt wurde
+    if (mapState.hasDragged) {
+        mapState.hasDragged = false;
+        return;
+    }
     const tree = findTreeAtPosition(e.offsetX, e.offsetY);
     if (tree) {
         scrollToTree(tree.id);

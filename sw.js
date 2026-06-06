@@ -1,4 +1,4 @@
-const APP_VERSION = 'v9';
+const APP_VERSION = 'v10';
 const APP_DATE = '06.06.2026';
 const CACHE_NAME = `baumentwicklung-${APP_VERSION}`;
 const urlsToCache = [
@@ -34,8 +34,14 @@ self.addEventListener('install', event => {
     );
 });
 
-// Fetch from cache
+// Fetch from cache, fall back to network
 self.addEventListener('fetch', event => {
+    // OSM-Tile-Requests nie cachen – immer live laden
+    if (event.request.url.includes('tile.openstreetmap.org')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
