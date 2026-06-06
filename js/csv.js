@@ -329,6 +329,10 @@ function parseCSV(csvContent) {
                     if (value) {
                         tree[internalKey] = parseDateString(value);
                     }
+                } else if (internalKey === 'x' || internalKey === 'y') {
+                    // Koordinaten normalisieren: Excel formatiert z.B. 10.114093 als "10.114.093"
+                    // (Punkt als Tausendertrennzeichen). Wir entfernen alle Punkte außer dem letzten.
+                    tree[internalKey] = parseCoordinate(value);
                 } else {
                     tree[internalKey] = value;
                 }
@@ -384,6 +388,28 @@ function parseCSVLine(line) {
     result.push(current);
     
     return result;
+}
+
+function parseCoordinate(value) {
+    if (!value) return '';
+    
+    // Ersetze Komma durch Punkt (deutsche Dezimalschreibweise: "10,114093")
+    let normalized = value.replace(',', '.');
+    
+    // Entferne Tausendertrennzeichen: wenn mehr als ein Punkt vorhanden ist,
+    // ist der ERSTE Punkt der Dezimaltrenner, alle weiteren sind Tausenderpunkte.
+    // Beispiel: "10.114.093" → "10.114093", "51.176.226" → "51.176226"
+    const dotCount = (normalized.match(/\./g) || []).length;
+    if (dotCount > 1) {
+        const firstDot = normalized.indexOf('.');
+        const beforeDot = normalized.substring(0, firstDot);
+        const afterDot = normalized.substring(firstDot + 1).replace(/\./g, '');
+        normalized = beforeDot + '.' + afterDot;
+    }
+    
+    const num = parseFloat(normalized);
+    if (isNaN(num)) return value; // Fallback: Originalwert behalten
+    return String(num);
 }
 
 function parseDateString(dateStr) {

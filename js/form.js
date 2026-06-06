@@ -1,5 +1,23 @@
 // Form Handling
 import { trees, editingTreeIndex, setEditingTreeIndex, updateTree, addTree, deleteTreeAtIndex, clearAllTrees } from './state.js';
+
+// Koordinaten-Normalisierung: Komma → Punkt, Tausenderpunkte entfernen
+// Beispiele: "51,176226" → "51.176226", "10.114.093" → "10.114093"
+// Der ERSTE Punkt ist immer der Dezimaltrenner, alle weiteren sind Tausenderpunkte.
+function normalizeCoordinate(value) {
+    if (!value || value === '0') return value;
+    let normalized = String(value).trim().replace(',', '.');
+    const dotCount = (normalized.match(/\./g) || []).length;
+    if (dotCount > 1) {
+        const firstDot = normalized.indexOf('.');
+        const beforeDot = normalized.substring(0, firstDot);
+        const afterDot = normalized.substring(firstDot + 1).replace(/\./g, '');
+        normalized = beforeDot + '.' + afterDot;
+    }
+    const num = parseFloat(normalized);
+    return isNaN(num) ? value : String(num);
+}
+
 import { saveTreesToStorage, updateSavedCount, checkStorageUsage } from './storage.js';
 import { incrementTreeId, incrementRowId, treeExists } from './helpers.js';
 import { showWelcomeScreen, showFormScreen, updateButtonLabels } from './navigation.js';
@@ -63,8 +81,10 @@ export function saveTree(action) {
     }
     
     // Standard-Felder
-    tree.x = formData.get('longitude') || '0';
-    tree.y = formData.get('latitude') || '0';
+    // Koordinaten normalisieren: Komma → Punkt, Tausenderpunkte entfernen
+    // (verhindert locale-bedingte Fehlformatierung wie "10,114093" oder "10.114.093")
+    tree.x = normalizeCoordinate(formData.get('longitude') || '0');
+    tree.y = normalizeCoordinate(formData.get('latitude') || '0');
     tree['ID (z.B. "LRO-B-9")'] = formData.get('baumId');
     tree['Name(n) der durchführenden Person(en)'] = formData.get('name');
     tree['Untersuchte Baumart'] = formData.get('baumart');

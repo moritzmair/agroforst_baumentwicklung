@@ -57,8 +57,9 @@ export function getGPSLocation() {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lon;
+            // toFixed(6) erzwingt Punkt als Dezimaltrennzeichen (locale-unabhängig)
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lon.toFixed(6);
             
             display.textContent = `📍 Position: ${lat.toFixed(6)}, ${lon.toFixed(6)} (±${Math.round(position.coords.accuracy)}m)`;
             display.classList.add('active');
